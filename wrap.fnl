@@ -1,9 +1,9 @@
 (local fennel (require :lib.fennel))
 (local repl (require :lib.stdio))
-(local canvas (let [(w h) (love.window.getMode)]
-                (love.graphics.newCanvas w h)))
 
-(var scale 1)
+(var scale 4)
+(local canvas (let [(w h) (love.window.getMode)]
+                (love.graphics.newCanvas (/ w scale) (/ h scale))))
 
 ;; set the first mode
 (var (mode mode-name) nil)
