@@ -14,7 +14,7 @@
 
 (fn love.load [args]
   (love.graphics.setDefaultFilter :nearest :nearest)
-  (set-mode "src/viewer/scene")
+  (set-mode "src/viewer/viewer")
   (when (~= :web (. args 1)) (repl.start)))
 
 (fn safely [f]
