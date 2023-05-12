@@ -41,8 +41,8 @@
   (when mode.update
     (safely #(mode.update mode {: dt : set-mode : screen-size}))))
 
-(fn love.keypressed [key]
-  (if (and (love.keyboard.isDown "lctrl" "rctrl" "capslock") (= key "q"))
+(fn love.keypressed [_k scancode]
+  (if (and (love.keyboard.isDown "lctrl" "rctrl" "capslock") (= scancode "q"))
       (love.event.quit)
       ;; add what each keypress should do in each mode
-      (safely #(mode.keypressed key set-mode))))
+      (safely #(mode.keypressed mode scancode))))
