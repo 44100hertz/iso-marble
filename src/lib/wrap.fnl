@@ -1,13 +1,13 @@
+(local fennel (require :lib.fennel))
+(local repl (require :lib.stdio))
+(require :src.lib.util) ;; creates global util.x
+
 ;; DEBUG ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(local fennel (require "lib/fennel")) (fn _G.pp [x] (print (fennel.view x)))
-
+(fn _G.pp [x] (print (fennel.view x)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(local fennel (require :lib.fennel))
-(local repl (require :lib.stdio))
 
 (var scale 4)
 
@@ -22,7 +22,7 @@
 
 (fn love.load [args]
   (love.graphics.setDefaultFilter :nearest :nearest)
-  (set-mode "src/viewer/viewer")
+  (set-mode "src/editor/editor")
   (when (~= :web (. args 1)) (repl.start)))
 
 (fn safely [f]
