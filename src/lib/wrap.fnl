@@ -35,11 +35,11 @@
   (love.graphics.clear)
   (love.graphics.setColor 1 1 1)
   (love.graphics.scale scale)
-  (safely #(mode.draw mode {:screen-size screen-size})))
+  (safely #(mode.draw mode {: screen-size})))
 
 (fn love.update [dt]
   (when mode.update
-    (safely #(mode.update mode {:dt dt :set-mode set-mode :screen-size screen-size}))))
+    (safely #(mode.update mode {: dt : set-mode : screen-size}))))
 
 (fn love.keypressed [key]
   (if (and (love.keyboard.isDown "lctrl" "rctrl" "capslock") (= key "q"))
