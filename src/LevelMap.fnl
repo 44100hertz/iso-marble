@@ -1,5 +1,3 @@
-(import-macros {: incf} "src/lib/macros")
-
 (local LevelMap (util.class))
 
 (fn LevelMap.constructor [levelname]

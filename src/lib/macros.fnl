@@ -1,4 +1,4 @@
-(fn inc [value ?by]
+(fn ++ [value ?by]
   `(set ,value (+ ,value (or ,?by 1))))
 
 (fn dec [value ?by]
@@ -10,4 +10,4 @@
          ,?body
          ,keys)))
 
-{: inc : dec : with}
+{: ++ : dec : with}
