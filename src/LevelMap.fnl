@@ -4,7 +4,8 @@
 
 (fn LevelMap.constructor [levelname]
    {:map (require (.. "levels/" levelname "/map"))
-    :tile-gfx (love.graphics.newImage (.. "levels/" levelname "/tiles.png"))})
+    :tile-gfx (love.graphics.newImage (.. "levels/" levelname "/tiles.png"))
+    :scroll {:x 80 :y 0}})
 
 (fn LevelMap.draw-layer [self index]
   (let [tiles (. self.map :layers index :tiles)]
@@ -17,12 +18,5 @@
 (fn LevelMap.draw-map [self]
   (for [i (length self.map.layers) 1 -1]
     (self:draw-layer i)))
-
-(fn LevelMap.draw [self]
-  (love.graphics.clear 0 0 0)
-  (love.graphics.translate 80 0)
-  (self:draw-map self.map))
-(fn LevelMap.update [self])
-(fn LevelMap.keypressed [self])
 
 LevelMap
