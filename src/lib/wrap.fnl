@@ -24,7 +24,7 @@
   (love.graphics.clear)
   (love.graphics.setColor 1 1 1)
   (love.graphics.scale scale)
-  (safely mode.draw))
+  (safely #(mode.draw mode)))
 
 (fn love.update [dt]
   (when mode.update
