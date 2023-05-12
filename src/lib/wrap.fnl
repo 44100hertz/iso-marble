@@ -10,6 +10,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (var scale 4)
+(var screen-size {})
 
 ;; set the first mode
 (var (mode mode-name) nil)
@@ -17,26 +18,28 @@
 (fn set-mode [new-mode-name ...]
   (set (mode mode-name) (values (require new-mode-name) new-mode-name))
   (when mode.activate
-    (match (pcall mode.activate ...)
+    (match (pcall mode.activate mode ...)
       (false msg) (print mode-name "activate error" msg))))
 
 (fn love.load [args]
   (love.graphics.setDefaultFilter :nearest :nearest)
-  (set-mode "src/editor/editor")
+  (set-mode "src.editor.editor")
+  (set screen-size (let [(x y) (love.window.getMode)]
+                     {:x (/ x scale) :y (/ y scale)}))
   (when (~= :web (. args 1)) (repl.start)))
 
 (fn safely [f]
-  (xpcall f #(set-mode "src/lib/error-mode" mode-name $ (fennel.traceback))))
+  (xpcall f #(set-mode "src.lib.error-mode" mode-name $ (fennel.traceback))))
 
 (fn love.draw []
   (love.graphics.clear)
   (love.graphics.setColor 1 1 1)
   (love.graphics.scale scale)
-  (safely #(mode.draw mode)))
+  (safely #(mode.draw mode {:screen-size screen-size})))
 
 (fn love.update [dt]
   (when mode.update
-    (safely #(mode.update dt set-mode))))
+    (safely #(mode.update mode {:dt dt :set-mode set-mode :screen-size screen-size}))))
 
 (fn love.keypressed [key]
   (if (and (love.keyboard.isDown "lctrl" "rctrl" "capslock") (= key "q"))
