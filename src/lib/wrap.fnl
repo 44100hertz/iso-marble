@@ -46,3 +46,7 @@
       (love.event.quit)
       ;; add what each keypress should do in each mode
       (safely #(mode.keypressed mode scancode))))
+
+(fn love.mousepressed [x y ...]
+ (when mode.mousepressed
+   (safely #mode.mousepressed (/ x scale) (/ y scale) ...)))
