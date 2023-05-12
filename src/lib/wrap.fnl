@@ -2,8 +2,6 @@
 (local repl (require :lib.stdio))
 
 (var scale 4)
-(local canvas (let [(w h) (love.window.getMode)]
-                (love.graphics.newCanvas (/ w scale) (/ h scale))))
 
 ;; set the first mode
 (var (mode mode-name) nil)
@@ -15,23 +13,18 @@
       (false msg) (print mode-name "activate error" msg))))
 
 (fn love.load [args]
+  (love.graphics.setDefaultFilter :nearest :nearest)
   (set-mode "src/viewer/scene")
-  (canvas:setFilter "nearest" "nearest")
   (when (~= :web (. args 1)) (repl.start)))
 
 (fn safely [f]
   (xpcall f #(set-mode "src/lib/error-mode" mode-name $ (fennel.traceback))))
 
 (fn love.draw []
-  ;; the canvas allows you to get sharp pixel-art style scaling; if you
-  ;; don't want that, just skip that and call mode.draw directly.
-  (love.graphics.setCanvas canvas)
   (love.graphics.clear)
   (love.graphics.setColor 1 1 1)
-  (safely mode.draw)
-  (love.graphics.setCanvas)
-  (love.graphics.setColor 1 1 1)
-  (love.graphics.draw canvas 0 0 0 scale scale))
+  (love.graphics.scale scale)
+  (safely mode.draw))
 
 (fn love.update [dt]
   (when mode.update
