@@ -1,6 +1,6 @@
 (var Editor {})
 
-(local Viewer (require "src/viewer/Viewer"))
-(var viewer (Viewer.new "test"))
+(local LevelMap (require "src/LevelMap"))
+(var level-map (LevelMap.new "test"))
 
-viewer
+level-map
