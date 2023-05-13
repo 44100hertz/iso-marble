@@ -1,6 +1,7 @@
 (local fennel (require :lib.fennel))
 (local repl (require :lib.stdio))
 (require :src.lib.util) ;; creates global util.x
+(require :src.lib.Vec) ;; creates global Vec2 and Vec3
 
 ;; DEBUG ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
