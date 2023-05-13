@@ -1,20 +1,6 @@
 return {
-  xsize = 3,
-  zsize = 3,
-  layers = {
-    {
-      tiles = {
-        1,0,0,
-        0,0,0,
-        0,0,0,
-      }
-    },
-    {
-      tiles = {
-        1,0,1,
-        0,1,1,
-        0,1,0,
-      }
-    }
+  size = {10,10,10},
+  objects = {
+    {type='cube', pos = {1,1,1}, size = {3,3,3}}
   },
 }

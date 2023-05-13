@@ -9,7 +9,7 @@
    :layer-select-image (love.graphics.newImage "src/editor/layerselect.png")})
 
 (fn Editor.set-layer [self layer]
-  (set self.layer-index (util.clamp layer 1 (length self.map.map.layers))))
+  (set self.layer-index (util.clamp layer 1 (length self.map.layers))))
 
 (fn Editor.set-layer-relative [self amount]
   (self:set-layer (+ self.layer-index amount)))
@@ -20,7 +20,7 @@
       :a (fn [self] (self:set-layer-relative 1))})
 
 (fn Editor.draw-map [self screen-size]
-  (for [i (length self.map.map.layers) 1 -1]
+  (for [i (length self.map.layers) 1 -1]
     (when (= i self.layer-index)
       (love.graphics.translate -80 0)
       (love.graphics.setColor 1 0 0 0.2)
