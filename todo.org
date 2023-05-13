@@ -1,0 +1,10 @@
+* In progress
+** TODO editor panning
+** TODO objects system
+Instead of storing tiles in a level, store a list of objects. These objects will render tiles to the tilemap.
+* Will do
+** TODO editor zoom
+** TODO actors system
+*** TODO actors rendering
+*** TODO collision system
+*** TODO player actor
