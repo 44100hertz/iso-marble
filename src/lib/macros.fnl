@@ -1,7 +1,7 @@
 (fn ++ [value ?by]
   `(set ,value (+ ,value (or ,?by 1))))
 
-(fn dec [value ?by]
+(fn -- [value ?by]
   `(set ,value (- ,value (or ,?by 1))))
 
 (fn with [t keys ?body]
@@ -10,4 +10,4 @@
          ,?body
          ,keys)))
 
-{: ++ : dec : with}
+{: ++ : -- : with}
