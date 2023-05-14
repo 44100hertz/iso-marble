@@ -41,11 +41,15 @@
   (when mode.update
     (safely #(mode:update {: dt : set-mode : screen-size}))))
 
-(fn love.keypressed [_k scancode is-repeat]
-  (if (and (love.keyboard.isDown "lctrl" "rctrl" "capslock") (= scancode "q"))
-      (love.event.quit)
-      ;; add what each keypress should do in each mode
-      (safely #(mode:keypressed scancode is-repeat))))
+(fn love.keypressed [_k scancode]
+  (let [modifier-list {:ctrl ["lctrl" "rctrl" "capslock"]
+                       :shift ["lshift" "rshift"]
+                       :alt ["lalt" "ralt"]}
+        modifiers (collect [modifier keys (pairs modifier-list)]
+                           (values modifier (love.keyboard.isDown (unpack keys))))]
+    (if (and modifiers.ctrl (= scancode "q"))
+        (love.event.quit)
+      (safely #(mode:keypressed scancode modifiers)))))
 
 (fn love.mousepressed [x y ...]
  (when mode.mousepressed
