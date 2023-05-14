@@ -22,12 +22,17 @@
     (tset Class.mt k #(Class.map $1 v $2))))
 
 (var Vec2 (util.class))
-(fn Vec2.constructor [x y] {: x : y})
+(fn Vec2.constructor [x y] {: x :y (if y y x)})
 (generate-operators Vec2 [:x :y])
 
 (var Vec3 (util.class))
-(fn Vec3.constructor [x y z] {: x : y : z})
+(fn Vec3.constructor [x y z] {: x :y (if y y x) :z (if z z x)})
 (generate-operators Vec3 [:x :y :z])
 
 (set _G.Vec2 Vec2)
 (set _G.Vec3 Vec3)
+
+;; DEBUG ;;;;;;
+(_G.pp (_G.Vec3 5 10 15))
+(_G.pp (- (_G.Vec3 5 10 15)))
+(_G.pp (* (_G.Vec3 2 2 2) (_G.Vec3 5 10 15)))
