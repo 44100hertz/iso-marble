@@ -53,4 +53,12 @@
 
 (fn love.mousepressed [x y ...]
  (when mode.mousepressed
-   (safely #mode.mousepressed (/ x scale) (/ y scale) ...)))
+   (safely #(mode:mousepressed (/ x scale) (/ y scale) $...))))
+
+(fn love.mousemoved [x y ...]
+ (when mode.mousemoved
+   (safely #(mode:mousemoved (/ x scale) (/ y scale) $...))))
+
+(fn love.mousereleased [x y ...]
+ (when mode.mousereleased
+   (safely #(mode:mousereleased (/ x scale) (/ y scale) $...))))
