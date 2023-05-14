@@ -9,7 +9,8 @@
    :layer-index 1
    :layer-select-image (love.graphics.newImage "src/editor/layerselect.png")
    :scroll (Vec2 80 0)
-   :scroll-rate 8})
+   :scroll-rate 8
+   :drag-mode {}})
 
 (fn Editor.destructor []
   (love.keyboard.setKeyRepeat false))
@@ -58,6 +59,17 @@
 (fn Editor.keypressed [self scancode modifiers]
   (when (. self.key-binds scancode) ((. self.key-binds scancode) self modifiers)))
 
-(fn Editor.mousepressed [x y])
+(fn Editor.mousepressed [self x y]
+  (set self.drag-mode {:type :scroll :last-pos (Vec2 x y)}))
+
+(fn Editor.mousereleased [self x y]
+  (set self.drag-mode {}))
+
+(fn Editor.mousemoved [self x y]
+  (case self.drag-mode.type
+    :scroll (do
+              (set self.scroll (+ self.scroll
+                                  (- (Vec2 x y) self.drag-mode.last-pos)))
+              (set self.drag-mode.last-pos (Vec2 x y)))))
 
 Editor
