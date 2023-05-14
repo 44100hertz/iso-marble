@@ -1,5 +1,5 @@
 * Tasks
-** TODO editor panning
+** DONE editor panning
 ** TODO editor zoom
 ** TODO mouse select objects
 ** TODO put source code online
