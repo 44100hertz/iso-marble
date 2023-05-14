@@ -32,4 +32,11 @@
     (f)
     (love.graphics.setColor oldr oldg oldb olda)))
 
+;; take any number of tables and combine them
+(fn util.union [...]
+  (let [out {}]
+    (each [_i table (ipairs [...])]
+      (each [k v (pairs table)] (tset out k v)))
+    out))
+
 (set _G.util util)
