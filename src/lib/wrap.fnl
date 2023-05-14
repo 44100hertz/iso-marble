@@ -1,7 +1,5 @@
 (local fennel (require :lib.fennel))
 (local repl (require :lib.stdio))
-(require :src.lib.util) ;; creates global util.x
-(require :src.lib.Vec) ;; creates global Vec2 and Vec3
 
 ;; DEBUG ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -9,6 +7,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (fn _G.pp [x] (print (fennel.view x)))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require :src.lib.util) ;; creates global util.x
+(require :src.lib.Vec) ;; creates global Vec2 and Vec3
 
 (var scale 4)
 (var screen-size {})
@@ -17,14 +17,13 @@
 (var (mode mode-name) nil)
 
 (fn set-mode [new-mode-name ...]
-  (set (mode mode-name) (values (require new-mode-name) new-mode-name))
-  (when mode.activate
-    (match (pcall mode.activate mode ...)
-      (false msg) (print mode-name "activate error" msg))))
+  (when (?. mode :destructor) (pcall mode.destructor mode ...))
+  (set mode ((require new-mode-name) ...))
+  (set mode-name new-mode-name))
 
 (fn love.load [args]
   (love.graphics.setDefaultFilter :nearest :nearest)
-  (set-mode "src.editor.editor")
+  (set-mode :src.editor.editor "test")
   (set screen-size (let [(x y) (love.window.getMode)]
                      {:x (/ x scale) :y (/ y scale)}))
   (when (~= :web (. args 1)) (repl.start)))
@@ -36,17 +35,17 @@
   (love.graphics.clear)
   (love.graphics.setColor 1 1 1)
   (love.graphics.scale scale)
-  (safely #(mode.draw mode {: screen-size})))
+  (safely #(mode:draw {: screen-size})))
 
 (fn love.update [dt]
   (when mode.update
-    (safely #(mode.update mode {: dt : set-mode : screen-size}))))
+    (safely #(mode:update {: dt : set-mode : screen-size}))))
 
-(fn love.keypressed [_k scancode]
+(fn love.keypressed [_k scancode is-repeat]
   (if (and (love.keyboard.isDown "lctrl" "rctrl" "capslock") (= scancode "q"))
       (love.event.quit)
       ;; add what each keypress should do in each mode
-      (safely #(mode.keypressed mode scancode))))
+      (safely #(mode:keypressed scancode is-repeat))))
 
 (fn love.mousepressed [x y ...]
  (when mode.mousepressed
