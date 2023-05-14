@@ -26,13 +26,18 @@
   (self:set-layer (+ self.layer-index amount)))
 
 (set Editor.key-binds
-     {
-      :q (fn [self] (self:set-layer-relative -1))
-      :a (fn [self] (self:set-layer-relative 1))
-      :up (fn [self] (set self.scroll (+ self.scroll (Vec2 0 self.scroll-rate))))
-      :down (fn [self] (set self.scroll (- self.scroll (Vec2 0 self.scroll-rate))))
-      :left (fn [self] (set self.scroll (+ self.scroll (Vec2 self.scroll-rate 0))))
-      :right (fn [self] (set self.scroll (- self.scroll (Vec2 self.scroll-rate 0))))})
+  (let [set-scroll
+        (fn [self offset is-shifted]
+          (set self.scroll (+ self.scroll
+                              (* (Vec2 self.scroll-rate)
+                                 offset
+                                 (Vec2 (if is-shifted 8 1))))))]
+    {:q (fn [self] (self:set-layer-relative -1))
+     :a (fn [self] (self:set-layer-relative 1))
+     :up (fn [self modifiers] (set-scroll self (Vec2 0 1) modifiers.shift))
+     :down (fn [self modifiers] (set-scroll self (Vec2 0 -1) modifiers.shift))
+     :left (fn [self modifiers] (set-scroll self (Vec2 1 0) modifiers.shift))
+     :right (fn [self modifiers] (set-scroll self (Vec2 -1 0) modifiers.shift))}))
 
 (fn Editor.draw-map [self screen-size]
   (for [i (length self.map.layers) 1 -1]
@@ -50,8 +55,8 @@
 
 (fn Editor.update [self])
 
-(fn Editor.keypressed [self scancode]
-  (when (. self.key-binds scancode) ((. self.key-binds scancode) self)))
+(fn Editor.keypressed [self scancode modifiers]
+  (when (. self.key-binds scancode) ((. self.key-binds scancode) self modifiers)))
 
 (fn Editor.mousepressed [x y])
 
