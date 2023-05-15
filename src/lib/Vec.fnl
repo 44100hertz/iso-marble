@@ -1,23 +1,35 @@
+;; workaround to make operators variadic because #(+ $...) doesn't actually
+;; work.
+(fn variadic-operator [op]
+  (fn [start ...] (accumulate [acc start _i n (ipairs [...])]
+                    (op acc n))))
+
 (local operators
-       {:__unm #(- 0 $1)
-        :__add #(+ $1 $2)
-        :__sub #(- $1 $2)
-        :__mul #(* $1 $2)
-        :__div #(/ $1 $2)
-        :__mod #(% $1 $2)})
+       {:__unm #(- $1)
+        :__mod #(% $1 $2)
+        :__add (variadic-operator #(+ $1 $2))
+        :__sub (variadic-operator #(- $1 $2))
+        :__mul (variadic-operator #(* $1 $2))
+        :__div (variadic-operator #(/ $1 $2))})
 
 ;; given a list and index, return a new list which indexes each entry by index
-(fn index-list [l index] (icollect [_i v (ipairs l)] (. l index)))
 
 ;; Given a class and a list of fields, generate operations for the class. For
 ;; example, given fields [:x :y] operation (+ p1 p2) will be the same as (Vec2
 ;; (+ p1.x p2.x) (+ p1.y p2.y))
 (fn generate-operators [Class fields]
-  ;; take up to 2 things
+  ;; take up to 8 points and does an operation on the fields of those points,
+  ;; for example:
+  ;; (Vec2.map (Vec2 1 2) (Vec2 3 4) #(+ $1 $2))
+  ;; is the same as (Vec2 (+ 1 3) (+ 2 4))
   (set Class.map
-        (fn [self f other]
-          (Class (unpack (icollect [_i v (ipairs fields)]
-                          (f (. self v) (if other (. other v))))))))
+       (fn [self f ...]
+         (let [index-list (fn [l index] (icollect [_i v (ipairs l)] (. v index)))
+               as-class (fn [t] (if (= (type t) :table) t (Class t)))
+               self (as-class self)
+               rest (icollect [_i v (ipairs [...])] (as-class v))]
+           (Class (unpack (icollect [_i v (ipairs fields)]
+                           (f (. self v) (unpack (index-list rest v)))))))))
   (each [k v (pairs operators)]
     (tset Class.mt k #(Class.map $1 v $2))))
 
@@ -36,3 +48,5 @@
 ;; (_G.pp (_G.Vec3 5 10 15))
 ;; (_G.pp (- (_G.Vec3 5 10 15)))
 ;; (_G.pp (* (_G.Vec3 2 2 2) (_G.Vec3 5 10 15)))
+;; (_G.pp (+ (_G.Vec2 0 0) 5))
+;; (_G.pp (type (Vec2 0)))
