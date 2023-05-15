@@ -20,15 +20,15 @@
 
 (fn set-mode [new-mode-name ...]
   (when (?. mode :destructor) (pcall mode.destructor mode ...))
-  (set mode ((require new-mode-name) ...))
+  (set mode ((require new-mode-name) call-table ...))
   (set mode-name new-mode-name))
 
 (fn love.load [args]
   (love.graphics.setDefaultFilter :nearest :nearest)
-  (set-mode :src.editor.editor "test")
   (set screen-size (let [(x y) (love.window.getMode)]
-                     {:x (/ x scale) :y (/ y scale)}))
+                     (_G.Vec2 (/ x scale) (/ y scale))))
   (set call-table {: set-mode : screen-size})
+  (set-mode :src.editor.editor "test")
   (when (~= :web (. args 1)) (repl.start)))
 
 (fn safely [f]
