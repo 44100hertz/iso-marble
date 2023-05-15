@@ -43,6 +43,8 @@
     (f)
     (love.graphics.setColor oldr oldg oldb olda)))
 
+(fn util.screen-size [] (_G.Vec2 (love.window.getMode)))
+
 ;; take any number of tables and combine them
 (set util.union util.lume.merge)
 
