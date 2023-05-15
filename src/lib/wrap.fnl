@@ -32,7 +32,8 @@
   (when (~= :web (. args 1)) (repl.start)))
 
 (fn safely [f]
-  (xpcall f #(set-mode "src.lib.error-mode" mode-name $ (fennel.traceback))))
+ (f))
+;;  (xpcall f #(set-mode "src.lib.error-mode" mode-name $ (fennel.traceback))))
 
 ;; A table that is put into every call to mode so that it has more functionality
 
