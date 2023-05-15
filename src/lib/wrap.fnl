@@ -12,6 +12,8 @@
 
 (var scale 4)
 (var screen-size {})
+(var call-table {}) ;; set of utility functions passed in as second argument of
+                 ;; mode calls
 
 ;; set the first mode
 (var (mode mode-name) nil)
@@ -26,20 +28,23 @@
   (set-mode :src.editor.editor "test")
   (set screen-size (let [(x y) (love.window.getMode)]
                      {:x (/ x scale) :y (/ y scale)}))
+  (set call-table {: set-mode : screen-size})
   (when (~= :web (. args 1)) (repl.start)))
 
 (fn safely [f]
   (xpcall f #(set-mode "src.lib.error-mode" mode-name $ (fennel.traceback))))
 
+;; A table that is put into every call to mode so that it has more functionality
+
 (fn love.draw []
   (love.graphics.clear)
   (love.graphics.setColor 1 1 1)
   (love.graphics.scale scale)
-  (safely #(mode:draw {: screen-size})))
+  (safely #(mode:draw call-table)))
 
 (fn love.update [dt]
   (when mode.update
-    (safely #(mode:update {: dt : set-mode : screen-size}))))
+    (safely #(mode:update (_G.util.union {: dt} call-table)))))
 
 (fn love.keypressed [_k scancode]
   (let [modifier-list {:ctrl ["lctrl" "rctrl" "capslock"]
