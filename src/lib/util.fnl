@@ -1,4 +1,7 @@
 (local util {})
+
+(set util.lume (require :lib.lume))
+
 ;; Convert tile coordinates to screen coordinates
 (fn util.iso-to-screen [x y z]
   (values (* 16 (- z x))
@@ -17,12 +20,20 @@
                             (when class.instantiate (instance:instantiate ...))
                             instance))})))
 
-(fn util.clamp [v lower upper]
-  (math.min upper (math.max lower v)))
+(set util.clamp util.lume.clamp)
 
-(fn util.with-scroll [{: x : y} f]
+(fn util.with-scroll [args f]
+  (util.with-transform [:translate (unpack args)] f))
+
+;; pass in a list of graphical transforms to apply when calling f
+;; for example:
+;; (util.with-transform [[:translate 10 20]] #(draw-carrot 100))
+(fn util.with-transform [tforms f]
   (love.graphics.push)
-  (love.graphics.translate x y)
+  (each [_i [tform a b c d] (ipairs tforms)]
+    ((. love.graphics tform)
+     (if (= (type a) :table) (values a.x a.y)
+         (values a b c d))))
   (f)
   (love.graphics.pop))
 
@@ -33,10 +44,6 @@
     (love.graphics.setColor oldr oldg oldb olda)))
 
 ;; take any number of tables and combine them
-(fn util.union [...]
-  (let [out {}]
-    (each [_i table (ipairs [...])]
-      (each [k v (pairs table)] (tset out k v)))
-    out))
+(set util.union util.lume.merge)
 
 (set _G.util util)
