@@ -1,6 +1,7 @@
 * Tasks
 ** DONE editor panning
-** TODO editor zoom
+** DONE editor zoom
+** TODO clickable editor ui objects
 ** TODO mouse select objects
 ** TODO put source code online
 ** TODO actors system
@@ -12,3 +13,4 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 
 * Backburner
 ** TODO improve point type by expanding single numbers to points
+** TODO fix xpcall handling and the wrapper "safely" call
