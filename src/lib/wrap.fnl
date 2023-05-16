@@ -10,8 +10,6 @@
 (require :src.lib.util) ;; creates global util.x
 (require :src.lib.Vec) ;; creates global Vec2 and Vec3
 
-(var scale 4)
-(var screen-size {})
 (var call-table {}) ;; set of utility functions passed in as second argument of
                  ;; mode calls
 
@@ -25,27 +23,18 @@
 
 (fn love.load [args]
   (love.graphics.setDefaultFilter :nearest :nearest)
-  (set screen-size (let [(x y) (love.window.getMode)]
-                     (_G.Vec2 (/ x scale) (/ y scale))))
-  (set call-table {: set-mode : screen-size})
+  (set call-table {: set-mode})
   (set-mode :src.editor.editor "test")
   (when (~= :web (. args 1)) (repl.start)))
-
-(fn safely [f]
- (f))
-;;  (xpcall f #(set-mode "src.lib.error-mode" mode-name $ (fennel.traceback))))
-
-;; A table that is put into every call to mode so that it has more functionality
 
 (fn love.draw []
   (love.graphics.clear)
   (love.graphics.setColor 1 1 1)
-  (love.graphics.scale scale)
-  (safely #(mode:draw call-table)))
+  (mode:draw call-table))
 
 (fn love.update [dt]
   (when mode.update
-    (safely #(mode:update (_G.util.union {: dt} call-table)))))
+    (mode:update (_G.util.union {: dt} call-table))))
 
 (fn love.keypressed [_k scancode]
   (let [modifier-list {:ctrl ["lctrl" "rctrl" "capslock"]
@@ -55,16 +44,20 @@
                            (values modifier (love.keyboard.isDown (unpack keys))))]
     (if (and modifiers.ctrl (= scancode "q"))
         (love.event.quit)
-      (safely #(mode:keypressed scancode modifiers)))))
+      (mode:keypressed scancode modifiers))))
 
-(fn love.mousepressed [x y ...]
+(fn love.mousepressed [...]
  (when mode.mousepressed
-   (safely #(mode:mousepressed (/ x scale) (/ y scale) $...))))
+   (mode:mousepressed ...)))
 
-(fn love.mousemoved [x y ...]
+(fn love.mousemoved [...]
  (when mode.mousemoved
-   (safely #(mode:mousemoved (/ x scale) (/ y scale) $...))))
+   (mode:mousemoved ...)))
 
-(fn love.mousereleased [x y ...]
+(fn love.mousereleased [...]
  (when mode.mousereleased
-   (safely #(mode:mousereleased (/ x scale) (/ y scale) $...))))
+   (mode:mousereleased ...)))
+
+(fn love.wheelmoved [...]
+ (when mode.wheelmoved
+   (mode:wheelmoved ...)))
