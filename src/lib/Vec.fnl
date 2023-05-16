@@ -1,5 +1,5 @@
-;; workaround to make operators variadic because #(+ $...) doesn't actually
-;; work.
+;; workaround to make operators variadic because #(+ $...) doesn't work
+;; https://todo.sr.ht/~technomancy/fennel/170
 (fn variadic-operator [op]
   (fn [start ...] (accumulate [acc start _i n (ipairs [...])]
                     (op acc n))))
