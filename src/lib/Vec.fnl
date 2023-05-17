@@ -36,6 +36,10 @@
 (var Vec2 (util.class))
 (fn Vec2.constructor [x y] {: x :y (if y y x)})
 (generate-operators Vec2 [:x :y])
+(fn Vec2.within-rectangle [self pos size]
+  (and
+   (> self.x pos.x) (< self.x (+ pos.x size.x))
+   (> self.y pos.y) (< self.y (+ pos.y size.y))))
 
 (var Vec3 (util.class))
 (fn Vec3.constructor [x y z] {: x :y (if y y x) :z (if z z x)})
