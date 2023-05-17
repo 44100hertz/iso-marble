@@ -9,16 +9,23 @@
    :layer-index 1
    :camera {:center (Vec2 100 0) :zoom 4} ;; boundaries of camera
    :scroll-rate 8
-   :UI (UI)
    :drag-mode {}})
 
 (fn Editor.instantiate [self]
-  (set self.event-handlers [self.UI self])
-  (set self.UI (UI [:button
-                    {:position (Vec2 0 0)
-                     :size (Vec2 40 80)
-                     :display [:image "src/editor/layerselect.png"]
-                     :onclick #(self:set-layer-relative 1)}])))
+  (set self.UI
+       (UI [:node
+           {:position (Vec2 0 0)
+            :size (Vec2 40 80)
+            :display [:image "src/editor/layerselect.png"]}
+            [[:button
+              {:position (Vec2 0 16)
+               :size (Vec2 40 32)
+               :onclick #(self:set-layer-relative -1)}]
+             [:button
+              {:position (Vec2 0 4on like fn does, but throws an error 8)
+               :size (Vec2 40 32)
+               :onclick #(self:set-layer-relative 1)}]]]))
+  (set self.event-handlers [self.UI self]))
 
 (fn Editor.destructor []
   (love.keyboard.setKeyRepeat false))
