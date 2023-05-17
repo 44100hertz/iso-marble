@@ -46,7 +46,7 @@
   (each [_i handler (ipairs handlers) &until stop]
     (set stop (and (. handler event) ((. handler event) handler (unpack args))))))
 
-;; When an event occurs, irst check if the mode has a list of event handlers,
+;; When an event occurs, first check if the mode has a list of event handlers,
 ;; and bubble the event thru the handlers. If there are no event handlers, then
 ;; it will simply call the function on the mode, if it exists.
 (fn handle-event [event-name ...]
