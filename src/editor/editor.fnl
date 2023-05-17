@@ -1,16 +1,24 @@
 (var Editor (util.class))
 
-(import-macros {: ++} :src.lib.macros)
+(local UI (require :src.lib.UI))
 (local LevelMap (require :src.LevelMap))
 
 (fn Editor.constructor [{: screen-size} levelname]
   (love.keyboard.setKeyRepeat true)
   {:map (LevelMap levelname)
    :layer-index 1
-   :layer-select-image (love.graphics.newImage "src/editor/layerselect.png")
    :camera {:center (Vec2 100 0) :zoom 4} ;; boundaries of camera
    :scroll-rate 8
+   :UI (UI)
    :drag-mode {}})
+
+(fn Editor.instantiate [self]
+  (set self.event-handlers [self.UI self])
+  (set self.UI (UI [:button
+                    {:position (Vec2 0 0)
+                     :size (Vec2 40 80)
+                     :display [:image "src/editor/layerselect.png"]
+                     :onclick #(self:set-layer-relative 1)}])))
 
 (fn Editor.destructor []
   (love.keyboard.setKeyRepeat false))
@@ -68,12 +76,7 @@
 (fn Editor.draw [self]
   ;; draw map
   (self:draw-map util.screen-size)
-  ;; draw point at 0
-  ;; (util.with-color-rgba 1 0 0 1
-  ;;   #(self:with-camera #(love.graphics.rectangle :fill 0 0 10 10)))
-  ;; draw UI
-;;  (love.graphics.print self.layer-index)
-  (love.graphics.draw self.layer-select-image 0 0))
+  (self.UI:draw))
 
 (fn Editor.update [self])
 
@@ -100,7 +103,6 @@
   (let [mousepos (Vec2 (love.mouse.getPosition))
         tform (self:get-transform)
         ingame-pos (Vec2 (tform:inverseTransformPoint mousepos.x mousepos.y))]
-    (pp ingame-pos)
     (self:adjust-zoom y ingame-pos)))
 
 Editor
