@@ -41,14 +41,10 @@
 ;; instances) containing methods with the same name and args as the event in
 ;; question. If said function does not exist, or the function returns false,
 ;; then try the next handler in the list.
-(fn event-with-bubble [event args handlers handler-index]
-  (let [handler-index (or handler-index 1)
-        handler (. handlers handler-index)
-        event-function (?. handler event)]
-    (when handler
-      (if (not (and event-function
-                   (event-function handler (unpack args))))
-        (event-with-bubble event args handlers (+ 1 handler-index))))))
+(fn event-with-bubble [event args handlers]
+  (var stop false)
+  (each [_i handler (ipairs handlers) &until stop]
+    (set stop (and (. handler event) ((. handler event) handler (unpack args))))))
 
 ;; When an event occurs, irst check if the mode has a list of event handlers,
 ;; and bubble the event thru the handlers. If there are no event handlers, then
