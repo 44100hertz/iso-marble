@@ -5,9 +5,16 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 ** DONE editor zoom
 ** DONE clickable editor ui objects
 ** DONE put source code online
-** TODO mouse select objects
+** TODO basic editing operatons
+*** DONE mouse hover tiles
+*** TODO mouse delete cube
+*** TODO mouse add cube
+*** TODO mouse move cube
+*** TODO resize cube
+** DONE change tile layout to be 1-dimensional
 ** TODO actors system
 *** TODO actors rendering
+*** TODO mouse select actors
 *** TODO collision system
 *** TODO player actor
 *** TODO enemy actor
@@ -15,9 +22,9 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 *** TODO ramps
 *** TODO tubes
 *** TODO loops??
+** TODO unify UI and scene model as game state tree
 ** TODO save/load maps
-
 * Backburner
-** TODO improve point type by expanding single numbers to points
+** DONE improve point type by expanding single numbers to points
 ** TODO fix xpcall handling and the wrapper "safely" call
-** TODO turn UI system into general component heirarchy system
+** TODO rewrite Vector operations as macros for speed
