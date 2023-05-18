@@ -2,19 +2,20 @@
 
 (fn LevelMap.constructor [levelname]
   (let [map (require (.. "levels/" levelname "/map"))]
-    {:map (util.union
-           map
-           {:size (Vec3 (unpack map.size))
-            :objects (icollect [i {: pos : size &as props} (ipairs map.objects)]
-                        (util.union
-                         props
-                         {:pos (Vec3 (unpack pos))
-                          :size (Vec3 (unpack size))}))})
+    {: map
      :tile-gfx (love.graphics.newImage (.. "levels/" levelname "/tiles.png"))
-     :tiles {}
+     :tile-map {}
+     :color-map {}
+     :highlight-tile nil
      :scroll (Vec2 80 0)}))
 
 (fn LevelMap.instantiate [self]
+  ;; copy tables to Vec3 where applicable
+  (set self.map.size (Vec3 (unpack self.map.size)))
+  (each [_i obj (ipairs self.map.objects)]
+    (set obj.pos (Vec3 (unpack obj.pos)))
+    (set obj.size (Vec3 (unpack obj.size))))
+  ;; render objects into tile-map and color-map
   (each [_i obj-data (ipairs self.map.objects)]
     (let [obj (require (.. "objects/" obj-data.type))]
       (obj.render {:set-tile #(self:set-tile $...)}
@@ -31,19 +32,30 @@
    (* self.map.size.x z)
    (* self.map.size.x self.map.size.z y)))
 
-(fn LevelMap.set-tile [self pos value]
+(fn LevelMap.set-tile [self pos value props]
   (if (self:within-tile-bounds? pos)
-    (tset self.tiles (self:tile-index pos) value)
-    (when (?. DEBUG :tiles)
-      (DEBUG.warn-with-traceback "Attempt to set out of bounds tile" pos value))))
+      (do
+        (let [tile-index (self:tile-index pos)]
+          (tset self.tile-map tile-index value)
+          (tset self.color-map tile-index (. self :map :colormap props.color))))
+      (when (?. DEBUG :tiles)
+        (DEBUG.warn-with-traceback "Attempt to set out of bounds tile" pos value))))
+
+(fn LevelMap.draw-tile [self pos]
+  (let [tile-index (self:tile-index pos)
+        tile (. self.tile-map tile-index)
+        color (if (and self.highlight-tile (= pos self.highlight-tile))
+                  [1 0 0 1]
+                  (. self.color-map tile-index))
+        screen-pos (- (pos:project-to-screen) (Vec2 16 0))]
+    (when (= tile 1)
+      (love.graphics.setColor (if color (unpack color) (values 1 1 1 1)))
+      (love.graphics.draw self.tile-gfx screen-pos.x screen-pos.y))))
 
 (fn LevelMap.draw-layer [self layer-index]
   (for [z 0 (- self.map.size.z 1)]
     (for [x 0 (- self.map.size.x 1)]
-      (let [pos (Vec3 x layer-index z)
-            tile (. self.tiles (self:tile-index pos))
-            screen-pos (- (pos:project-to-screen) (Vec2 16 0))]
-        (when (= tile 1) (love.graphics.draw self.tile-gfx screen-pos.x screen-pos.y))))))
+      (self:draw-tile (Vec3 x layer-index z)))))
 
 (fn LevelMap.draw-map [self]
   (for [i (length self.layers) 0 -1]
