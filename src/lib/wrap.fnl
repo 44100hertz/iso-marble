@@ -7,6 +7,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (fn _G.pp [x] (print (fennel.view x)))
 (local pp _G.pp)
+
+(set _G.DEBUG {:tiles true})
+(fn _G.DEBUG.warn-with-traceback [...]
+  (each [_ msg (ipairs [...])]
+    (pp msg))
+  (print (debug.traceback)))
+;;
+;; UNCOMMENT TO DISABLE DEBUG
+;; (set _G.DEBUG {})
+;; (fn _G.DEBUG.warn [] (do))
+;; /UNCOMMENT
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require :src.lib.util) ;; creates global util.x
 (require :src.lib.Vec) ;; creates global Vec2 and Vec3
