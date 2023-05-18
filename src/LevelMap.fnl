@@ -2,11 +2,14 @@
 
 (fn LevelMap.constructor [levelname]
   (let [map (require (.. "levels/" levelname "/map"))]
-    {:map {:size (Vec3 (unpack map.size))
-           :objects (icollect [_i {: type : pos : size} (ipairs map.objects)]
-                      {: type
-                       :pos (Vec3 (unpack pos))
-                       :size (Vec3 (unpack size))})}
+    {:map (util.union
+           map
+           {:size (Vec3 (unpack map.size))
+            :objects (icollect [i {: pos : size &as props} (ipairs map.objects)]
+                        (util.union
+                         props
+                         {:pos (Vec3 (unpack pos))
+                          :size (Vec3 (unpack size))}))})
      :tile-gfx (love.graphics.newImage (.. "levels/" levelname "/tiles.png"))
      :tiles {}
      :scroll (Vec2 80 0)}))
