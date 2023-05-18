@@ -55,7 +55,7 @@
            (util.lume.lerp self.camera.center center-point 0.5)))))))
 
 (fn Editor.set-layer [self layer]
-  (set self.layer-index (util.clamp layer 0 (self.map.map.size))))
+  (set self.layer-index (util.clamp layer 0 self.level.map.size.y)))
 
 (fn Editor.set-layer-relative [self amount]
   (self:set-layer (+ self.layer-index amount)))
