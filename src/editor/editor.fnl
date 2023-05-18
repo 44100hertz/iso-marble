@@ -5,7 +5,7 @@
 
 (fn Editor.constructor [{: screen-size} levelname]
   (love.keyboard.setKeyRepeat true)
-  {:map (LevelMap levelname)
+  {:level (LevelMap levelname)
    :layer-index 1
    :camera {:center (Vec2 100 0) :zoom 4} ;; boundaries of camera
    :scroll-rate 8
@@ -78,12 +78,12 @@
      :right (fn [self modifiers] (set-scroll self (Vec2 1 0) modifiers.shift))}))
 
 (fn Editor.draw-map [self]
-  (for [i self.map.map.size.y 0 -1]
+  (for [i self.level.map.size.y 0 -1]
     (when (= i self.layer-index)
       (util.with-color-rgba 1 0 0 0.2
         (let [(x y) (love.window.getMode)]
           #(love.graphics.rectangle :fill 0 0 x y))))
-    (self:with-camera #(self.map:draw-layer i))))
+    (self:with-camera #(self.level:draw-layer i))))
 
 (fn Editor.draw [self]
   ;; draw map
