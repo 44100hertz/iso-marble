@@ -1,15 +1,21 @@
 * Tasks
+** DONE objects system
+Instead of storing tiles in a level, store a list of objects. These objects will render tiles to the tilemap.
 ** DONE editor panning
 ** DONE editor zoom
 ** DONE clickable editor ui objects
+** DONE put source code online
 ** TODO mouse select objects
-** TODO put source code online
 ** TODO actors system
 *** TODO actors rendering
 *** TODO collision system
 *** TODO player actor
-** DONE objects system
-Instead of storing tiles in a level, store a list of objects. These objects will render tiles to the tilemap.
+*** TODO enemy actor
+** TODO create game objects
+*** TODO ramps
+*** TODO tubes
+*** TODO loops??
+** TODO save/load maps
 
 * Backburner
 ** TODO improve point type by expanding single numbers to points
