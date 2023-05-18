@@ -4,8 +4,9 @@
   (fn [start ...] (accumulate [acc start _i n (ipairs [...])]
                     (op acc n))))
 
-(local operators
+(local math-operators
        {:__unm #(- $1)
+        :__pow #(^ $1 $2)
         :__mod #(% $1 $2)
         :__add (variadic-operator #(+ $1 $2))
         :__sub (variadic-operator #(- $1 $2))
@@ -22,15 +23,14 @@
   ;; for example:
   ;; (Vec2.map (Vec2 1 2) (Vec2 3 4) #(+ $1 $2))
   ;; is the same as (Vec2 (+ 1 3) (+ 2 4))
-  (set Class.map
-       (fn [self f ...]
-         (let [index-list (fn [l index] (icollect [_i v (ipairs l)] (. v index)))
-               as-class (fn [t] (if (= (type t) :table) t (Class t)))
-               self (as-class self)
-               rest (icollect [_i v (ipairs [...])] (as-class v))]
-           (Class (unpack (icollect [_i v (ipairs fields)]
-                           (f (. self v) (unpack (index-list rest v)))))))))
-  (each [k v (pairs operators)]
+  (fn Class.map [self f ...]
+      (let [index-list (fn [l index] (icollect [_i v (ipairs l)] (. v index)))
+            as-vec (fn [t] (if (= (type t) :table) t (Class t)))
+            self (as-vec self)
+            rest (icollect [_i v (ipairs [...])] (as-vec v))]
+        (Class (unpack (icollect [_i v (ipairs fields)]
+                        (f (. self v) (unpack (index-list rest v))))))))
+  (each [k v (pairs math-operators)]
     (tset Class.mt k #(Class.map $1 v $2))))
 
 (var Vec2 (util.class))
