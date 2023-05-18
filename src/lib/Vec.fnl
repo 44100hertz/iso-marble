@@ -31,7 +31,11 @@
         (Class (unpack (icollect [_i v (ipairs fields)]
                         (f (. self v) (unpack (index-list rest v))))))))
   (each [k v (pairs math-operators)]
-    (tset Class.mt k #(Class.map $1 v $2))))
+    (tset Class.mt k #(Class.map $1 v $2)))
+  ;; Check equality of two Vecs
+  (fn Class.mt.__eq [self other]
+    (accumulate [equal? true _i field (ipairs fields) &until (not equal?)]
+      (= (. self field) (. other field)))))
 
 (var Vec2 (util.class))
 (fn Vec2.constructor [x y] {: x :y (if y y x)})
@@ -41,9 +45,9 @@
    (> self.x pos.x) (< self.x (+ pos.x size.x))
    (> self.y pos.y) (< self.y (+ pos.y size.y))))
 (fn Vec2.project-from-screen [{:x screen-x :y screen-y} y]
-  (_G.Vec3 (+ (/ screen-y 16) (/ screen-x 32) y)
+  (_G.Vec3 (+ (/ screen-y 16) (/ screen-x 32) (- y))
            y
-           (+ (/ screen-y 16) (/ screen-x -32) y)))
+           (+ (/ screen-y 16) (/ screen-x -32) (- y))))
 
 (var Vec3 (util.class))
 (fn Vec3.constructor [x y z] {: x :y (if y y x) :z (if z z x)})
@@ -61,3 +65,7 @@
 ;; (_G.pp (* (_G.Vec3 2 2 2) (_G.Vec3 5 10 15)))
 ;; (_G.pp (+ (_G.Vec2 0 0) 5))
 ;; (_G.pp (type (Vec2 0)))
+;; (_G.pp (= (_G.Vec3 1 1 1) (_G.Vec3 1 1 1)))
+;; (_G.pp (= (_G.Vec3 1 1 1) (_G.Vec3 2 1 1)))
+;; (_G.pp (= (_G.Vec3 1 1 1) (_G.Vec3 1 2 1)))
+;; (_G.pp (= (_G.Vec3 1 1 1) (_G.Vec3 1 1 2)))
