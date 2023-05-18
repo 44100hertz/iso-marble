@@ -55,7 +55,7 @@
            (util.lume.lerp self.camera.center center-point 0.5)))))))
 
 (fn Editor.set-layer [self layer]
-  (set self.layer-index (util.clamp layer 0 (length self.map.layers))))
+  (set self.layer-index (util.clamp layer 0 (self.map.map.size))))
 
 (fn Editor.set-layer-relative [self amount]
   (self:set-layer (+ self.layer-index amount)))
@@ -78,7 +78,7 @@
      :right (fn [self modifiers] (set-scroll self (Vec2 1 0) modifiers.shift))}))
 
 (fn Editor.draw-map [self]
-  (for [i (length self.map.layers) 0 -1]
+  (for [i self.map.map.size.y 0 -1]
     (when (= i self.layer-index)
       (util.with-color-rgba 1 0 0 0.2
         (let [(x y) (love.window.getMode)]
@@ -105,9 +105,7 @@
 (fn Editor.mousemoved [self x y]
   (case self.drag-mode.type
     nil (let [ingame-pos (self:scale-mouse (Vec2 x y))
-              mouse-tile (ingame-pos:project-from-screen self.layer-index)]
-
-          (pp mouse-tile))
+              mouse-tile (ingame-pos:project-from-screen self.layer-index)] (do))
     :scroll (do
               (set self.camera.center (- self.camera.center
                                         (/
