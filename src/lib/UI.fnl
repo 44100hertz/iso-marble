@@ -37,9 +37,12 @@
         pos (+ position offset)
         display-type (if display (. display 1) :none)]
     (case display-type
-      :image (let [image (self.image-cache:load (. display 2))
+      :image (let [(_ image-path) (unpack display)
+                   image (self.image-cache:load image-path)
                    image-size (Vec2 (image:getDimensions))
-                   scale (/ size image-size)]
+                   scale (/ size image-size)
+                   color (or props.color [1 1 1 1])]
+               (love.graphics.setColor color)
                (love.graphics.draw image pos.x pos.y 0 scale.x scale.y))
       :none (do)
       _ (error (.. "Unknown display-type on " type ": " display-type)))
