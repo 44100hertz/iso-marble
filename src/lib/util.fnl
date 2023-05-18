@@ -2,11 +2,6 @@
 
 (set util.lume (require :lib.lume))
 
-;; Convert tile coordinates to screen coordinates
-(fn util.iso-to-screen [x y z]
-  (values (* 16 (- z x))
-          (* 16 (+ y (/ (+ x z) 2)))))
-
 ;; Create a table which is a class X. When called as (X ...), it will construct
 ;; an object Y by calling X.constructor(...). The optional method
 ;; X.instantiate(...) will be called afterwards if it exists, for extra work

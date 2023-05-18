@@ -13,7 +13,7 @@
                        :pos (Vec3 (unpack pos))
                        :size (Vec3 (unpack size))})}
      :tile-gfx (love.graphics.newImage (.. "levels/" levelname "/tiles.png"))
-     :scroll {:x 80 :y 0}}))
+     :scroll (Vec2 80 0)}))
 
 (fn LevelMap.instantiate [self]
   (set self.layers (fcollect [_i 1 self.map.size.y] {:tiles {}}))
@@ -27,8 +27,9 @@
     (for [z 0 (- self.map.size.z 1)]
       (for [x 1 self.map.size.x]
         (let [tile (. tiles (+ (* z self.map.size.z) x))
-              (screen-x screen-y) (util.iso-to-screen x (- index 1) z)]
-          (when (= tile 1) (love.graphics.draw self.tile-gfx screen-x screen-y)))))))
+              tile-pos (Vec3 x (- index 1) z)
+              screen-pos (tile-pos:project-to-screen)]
+          (when (= tile 1) (love.graphics.draw self.tile-gfx screen-pos.x screen-pos.y)))))))
 
 (fn LevelMap.draw-map [self]
   (for [i (length self.layers) 1 -1]

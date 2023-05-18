@@ -41,9 +41,13 @@
    (> self.x pos.x) (< self.x (+ pos.x size.x))
    (> self.y pos.y) (< self.y (+ pos.y size.y))))
 
+
 (var Vec3 (util.class))
 (fn Vec3.constructor [x y z] {: x :y (if y y x) :z (if z z x)})
 (generate-operators Vec3 [:x :y :z])
+(fn Vec3.project-to-screen [{: x : y : z}]
+  (Vec2 (* 16 (- z x))
+        (* 16 (+ y (/ (+ x z) 2)))))
 
 (set _G.Vec2 Vec2)
 (set _G.Vec3 Vec3)
