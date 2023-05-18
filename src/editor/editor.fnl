@@ -14,17 +14,18 @@
 (fn Editor.instantiate [self]
   (set self.UI
        (UI [:node
-           {:position (Vec2 0 0)
-            :size (Vec2 40 80)
-            :display [:image "src/editor/layerselect.png"]}
-            [[:button
-              {:position (Vec2 0 16)
-               :size (Vec2 40 32)
-               :onclick #(self:set-layer-relative -1)}]
-             [:button
-              {:position (Vec2 0 4on like fn does, but throws an error 8)
-               :size (Vec2 40 32)
-               :onclick #(self:set-layer-relative 1)}]]]))
+            {:position (Vec2 0 0)
+             :size (Vec2 40 80)
+             :display [:image "src/editor/layerselect.png"]}
+            [
+              [:button
+                {:position (Vec2 0 16)
+                  :size (Vec2 40 32)
+                  :onclick #(self:set-layer-relative -1)}]
+              [:button
+                {:position (Vec2 0 48)
+                  :size (Vec2 40 32)
+                  :onclick #(self:set-layer-relative 1)}]]]))
   (set self.event-handlers [self.UI self]))
 
 (fn Editor.destructor []
