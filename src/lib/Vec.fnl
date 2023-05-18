@@ -40,13 +40,16 @@
   (and
    (> self.x pos.x) (< self.x (+ pos.x size.x))
    (> self.y pos.y) (< self.y (+ pos.y size.y))))
-
+(fn Vec2.project-from-screen [{:x screen-x :y screen-y} y]
+  (_G.Vec3 (+ (/ screen-y 16) (/ screen-x 32) y)
+           y
+           (+ (/ screen-y 16) (/ screen-x -32) y)))
 
 (var Vec3 (util.class))
 (fn Vec3.constructor [x y z] {: x :y (if y y x) :z (if z z x)})
 (generate-operators Vec3 [:x :y :z])
 (fn Vec3.project-to-screen [{: x : y : z}]
-  (Vec2 (* 16 (- z x))
+  (Vec2 (* 16 (- x z))
         (* 16 (+ y (/ (+ x z) 2)))))
 
 (set _G.Vec2 Vec2)

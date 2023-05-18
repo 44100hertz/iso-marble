@@ -41,6 +41,10 @@
 (fn Editor.with-camera [self f]
   (util.with-transform (self:get-transform) f))
 
+(fn Editor.scale-mouse [self point]
+  (let [tform (self:get-transform)]
+    (Vec2 (tform:inverseTransformPoint point.x point.y))))
+
 (fn Editor.adjust-zoom [self offset center-point]
   (let [next-zoom (+ self.camera.zoom offset)]
    (if (and (>= next-zoom 0.5) (<= next-zoom 8))
@@ -51,7 +55,7 @@
            (util.lume.lerp self.camera.center center-point 0.5)))))))
 
 (fn Editor.set-layer [self layer]
-  (set self.layer-index (util.clamp layer 1 (length self.map.layers))))
+  (set self.layer-index (util.clamp layer 0 (length self.map.layers))))
 
 (fn Editor.set-layer-relative [self amount]
   (self:set-layer (+ self.layer-index amount)))
@@ -74,7 +78,7 @@
      :right (fn [self modifiers] (set-scroll self (Vec2 1 0) modifiers.shift))}))
 
 (fn Editor.draw-map [self]
-  (for [i (length self.map.layers) 1 -1]
+  (for [i (length self.map.layers) 0 -1]
     (when (= i self.layer-index)
       (util.with-color-rgba 1 0 0 0.2
         (let [(x y) (love.window.getMode)]
@@ -100,6 +104,10 @@
 
 (fn Editor.mousemoved [self x y]
   (case self.drag-mode.type
+    nil (let [ingame-pos (self:scale-mouse (Vec2 x y))
+              mouse-tile (ingame-pos:project-from-screen self.layer-index)]
+
+          (pp mouse-tile))
     :scroll (do
               (set self.camera.center (- self.camera.center
                                         (/
@@ -108,9 +116,7 @@
               (set self.drag-mode.last-pos (Vec2 x y)))))
 
 (fn Editor.wheelmoved [self x y]
-  (let [mousepos (Vec2 (love.mouse.getPosition))
-        tform (self:get-transform)
-        ingame-pos (Vec2 (tform:inverseTransformPoint mousepos.x mousepos.y))]
-    (self:adjust-zoom y ingame-pos)))
+  (let [mousepos (Vec2 (love.mouse.getPosition))]
+    (self:adjust-zoom y (self:scale-mouse mousepos))))
 
 Editor
