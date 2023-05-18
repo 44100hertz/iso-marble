@@ -105,7 +105,9 @@
 (fn Editor.mousemoved [self x y]
   (case self.drag-mode.type
     nil (let [ingame-pos (self:scale-mouse (Vec2 x y))
-              mouse-tile (ingame-pos:project-from-screen self.layer-index)] (do))
+              mouse-pos-3d (ingame-pos:project-from-screen self.layer-index)
+              mouse-tile (mouse-pos-3d:map math.floor)]
+          (set self.level.highlight-tile mouse-tile))
     :scroll (do
               (set self.camera.center (- self.camera.center
                                         (/
