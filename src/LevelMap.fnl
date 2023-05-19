@@ -5,7 +5,6 @@
     {: map
      :tile-gfx (love.graphics.newImage (.. "levels/" levelname "/tiles.png"))
      :tile-map {}
-     :color-map {}
      :highlight-tile nil
      :scroll (Vec2 80 0)}))
 
@@ -36,17 +35,18 @@
   (if (self:within-tile-bounds? pos)
       (do
         (let [tile-index (self:tile-index pos)]
-          (tset self.tile-map tile-index value)
-          (tset self.color-map tile-index (. self :map :colormap props.color))))
+          (tset self.tile-map tile-index
+                {:tile value
+                 :color (. self :map :colormap props.color)})))
       (when (?. DEBUG :tiles)
         (DEBUG.warn-with-traceback "Attempt to set out of bounds tile" pos value))))
 
 (fn LevelMap.draw-tile [self pos]
   (let [tile-index (self:tile-index pos)
-        tile (. self.tile-map tile-index)
+        tile (?. self.tile-map tile-index :tile)
         color (if (and self.highlight-tile (= pos self.highlight-tile))
                   [1 0 0 1]
-                  (. self.color-map tile-index))
+                  (?. self.tile-map tile-index :color))
         screen-pos (- (pos:project-to-screen) (Vec2 16 0))]
     (when (= tile 1)
       (love.graphics.setColor (if color (unpack color) (values 1 1 1 1)))
