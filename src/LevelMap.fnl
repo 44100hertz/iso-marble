@@ -35,9 +35,11 @@
                 obj-data)))
 
 (fn LevelMap.highlight-object-at [self pos]
-  (let [tile (self:get-tile pos)]
-    (when tile
-      (self:highlight-object tile.object))))
+  (if pos
+    (let [tile (self:get-tile pos)]
+      (when tile
+        (self:highlight-object tile.object)))
+    (set self.highlight-map {})))
 
 (fn LevelMap.highlight-object [self obj-data]
   (set self.highlight-map {})
@@ -59,8 +61,24 @@
         (DEBUG.warn-with-traceback "Attempt to set out of bounds tile" pos value))))
 
 (fn LevelMap.get-tile [self pos]
-  (let [index (self:tile-index pos)]
-    (. self.tile-map index)))
+  (and (self:within-tile-bounds? pos)
+    (let [index (self:tile-index pos)]
+      (. self.tile-map index))))
+
+;; check an entire cube-shaped region based on a mouse position
+(fn LevelMap.get-tile-position-at [self point]
+    ;; cast a ray from the screen, check it at every layer
+    (var found-tile-pos false)
+    (for [layer 0 self.map.size.y (/ 1 128) &until found-tile-pos]
+      ;; check which nearby tiles this point could be inside of, and if there is
+      ;; is a tile there, return the position of that tile
+      (let [layer-pos (point:project-from-screen layer)
+            tile-pos (layer-pos:map math.floor)]
+        (set found-tile-pos
+             (and (layer-pos:within tile-pos (Vec3 1 1 1))
+                  (self:get-tile tile-pos)
+                  tile-pos))))
+    found-tile-pos)
 
 (fn LevelMap.draw-tile [self pos]
   (let [tile-index (self:tile-index pos)

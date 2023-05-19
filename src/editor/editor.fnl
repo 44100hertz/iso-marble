@@ -9,6 +9,7 @@
    :layer-index 1
    :camera {:center (Vec2 100 0) :zoom 4} ;; boundaries of camera
    :scroll-rate 8
+   :show-layer false
    :drag-mode {}})
 
 (fn Editor.instantiate [self]
@@ -41,6 +42,7 @@
 (fn Editor.with-camera [self f]
   (util.with-transform (self:get-transform) f))
 
+;; Scales the mouse position in accordance with zoom/scroll
 (fn Editor.scale-mouse [self point]
   (let [tform (self:get-transform)]
     (Vec2 (tform:inverseTransformPoint point.x point.y))))
@@ -79,7 +81,7 @@
 
 (fn Editor.draw-map [self]
   (for [i self.level.map.size.y 0 -1]
-    (when (= i self.layer-index)
+    (when (and self.show-layer (= i self.layer-index))
       (util.with-color-rgba 1 0 0 0.2
         (let [(x y) (love.window.getMode)]
           #(love.graphics.rectangle :fill 0 0 x y))))
@@ -104,10 +106,8 @@
 
 (fn Editor.mousemoved [self x y]
   (case self.drag-mode.type
-    nil (let [ingame-pos (self:scale-mouse (Vec2 x y))
-              mouse-pos-3d (ingame-pos:project-from-screen self.layer-index)
-              mouse-tile (mouse-pos-3d:map math.floor)]
-          (self.level:highlight-object-at mouse-tile))
+    nil (self.level:highlight-object-at
+         (self.level:get-tile-position-at (self:scale-mouse (Vec2 x y))))
     :scroll (do
               (set self.camera.center (- self.camera.center
                                         (/
