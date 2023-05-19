@@ -5,8 +5,10 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 ** DONE editor zoom
 ** DONE clickable editor ui objects
 ** DONE put source code online
+** TODO refactor tile data to store in series
 ** TODO basic editing operatons
 *** DONE mouse hover tiles
+*** TODO mouse select cube
 *** TODO mouse delete cube
 *** TODO mouse add cube
 *** TODO mouse move cube
