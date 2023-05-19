@@ -107,7 +107,7 @@
     nil (let [ingame-pos (self:scale-mouse (Vec2 x y))
               mouse-pos-3d (ingame-pos:project-from-screen self.layer-index)
               mouse-tile (mouse-pos-3d:map math.floor)]
-          (set self.level.highlight-tile mouse-tile))
+          (self.level:highlight-object-at mouse-tile))
     :scroll (do
               (set self.camera.center (- self.camera.center
                                         (/
