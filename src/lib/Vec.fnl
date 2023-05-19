@@ -55,11 +55,17 @@
 (fn Vec3.project-to-screen [{: x : y : z}]
   (Vec2 (* 16 (- x z))
         (* 16 (+ y (/ (+ x z) 2)))))
+(fn Vec3.within [self pos size]
+  (and
+   (>= self.x pos.x) (< self.x (+ pos.x size.x))
+   (>= self.y pos.y) (< self.y (+ pos.y size.y))
+   (>= self.z pos.z) (< self.z (+ pos.z size.z))))
 
 (set _G.Vec2 Vec2)
 (set _G.Vec3 Vec3)
 
 ;; DEBUG ;;;;;;
+;; (local {: pp : Vec2 : Vec3} _G)
 ;; (_G.pp (_G.Vec3 5 10 15))
 ;; (_G.pp (- (_G.Vec3 5 10 15)))
 ;; (_G.pp (* (_G.Vec3 2 2 2) (_G.Vec3 5 10 15)))
@@ -69,3 +75,5 @@
 ;; (_G.pp (= (_G.Vec3 1 1 1) (_G.Vec3 2 1 1)))
 ;; (_G.pp (= (_G.Vec3 1 1 1) (_G.Vec3 1 2 1)))
 ;; (_G.pp (= (_G.Vec3 1 1 1) (_G.Vec3 1 1 2)))
+;; (pp (Vec3.within (Vec3 0.5 0.5 0.5) (Vec3 0 0 0) (Vec3 1 1 1)))
+;; (pp (Vec3.within (Vec3 0 0 0) (Vec3 0 0 0) (Vec3 1 1 1)))
