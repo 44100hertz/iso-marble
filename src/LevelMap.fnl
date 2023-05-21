@@ -70,7 +70,9 @@
           (tset self.tile-map tile-index
                 {:object obj
                  :tile value
-                 :color (. self :map :colormap props.color)})))
+                 :color (. self :map :colormap props.color)
+                 ;; if overwriting tile, keep track of previous tile
+                 :last-tile (. self.tile-map tile-index)})))
       (when (?. DEBUG :tiles)
         (DEBUG.warn-with-traceback "Attempt to set out of bounds tile" pos value))))
 
@@ -107,7 +109,14 @@
 
 (fn LevelMap.delete-object [self obj]
   (each [index tile (pairs obj.tile-mask)]
-    (tset self.tile-map index nil)))
+    ;; last-tile is typically nil, but if a tile has been overwritten, then
+    ;; last-tile will be the tile that was overwritten. If the tile that was
+    ;; overwritten doesn't belong to the object being deleted, then the tile
+    ;; being deleted should be set to that tile instead of nullified. Otherwise,
+    ;; it is already correct and the tile will not be modified.
+    (let [last-tile (. self.tile-map index :last-tile)]
+      (when (or (not last-tile) (~= last-tile.object obj))
+        (tset self.tile-map index last-tile)))))
 
 ;; check an entire cube-shaped region based on a mouse position
 (fn LevelMap.get-tile-position-at [self point]

@@ -10,7 +10,7 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 *** DONE mouse hover tiles
 *** DONE mouse select cube
 *** DONE mouse delete cube
-*** TODO delete and re-render tiles
+*** DONE delete and re-render tiles
 *** TODO delete UI element
 *** TODO mouse add cube
 *** TODO mouse move cube
@@ -30,6 +30,7 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 ** TODO unify UI and scene model as game state tree
 ** TODO save/load maps
 * Backburner
+** TODO re-render all dependant objects on map modifications
 ** TODO automatic map size
 ** DONE improve point type by expanding single numbers to points
 ** TODO fix xpcall handling and the wrapper "safely" call
