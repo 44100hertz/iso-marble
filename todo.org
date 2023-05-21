@@ -11,7 +11,11 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 *** DONE mouse select cube
 *** DONE mouse delete cube
 *** DONE delete and re-render tiles
+*** TODO delete all references to deleted object within last-tile
 *** TODO delete UI element
+**** DONE add visible delete element
+**** TODO make x key do delete
+**** DONE set up editor delete mode
 *** TODO mouse add cube
 *** TODO mouse move cube
 *** TODO resize cube
@@ -30,6 +34,9 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 ** TODO unify UI and scene model as game state tree
 ** TODO save/load maps
 * Backburner
+** TODO make editor highlight a field rather than a separate table, and stack the color with the base color
+** TODO give UI custom cursors
+** TODO give UI ability to create sequential layout before it's too late
 ** TODO re-render all dependant objects on map modifications
 ** TODO automatic map size
 ** DONE improve point type by expanding single numbers to points

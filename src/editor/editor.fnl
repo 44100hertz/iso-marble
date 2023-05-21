@@ -10,27 +10,55 @@
    :camera {:center (Vec2 100 0) :zoom 4} ;; boundaries of camera
    :scroll-rate 8
    :show-layer false
-   :drag-mode {}})
+   :panning false
+   :mode {}})
 
 (fn Editor.instantiate [self]
   (set self.UI
-       (UI [:node
-            {:position (Vec2 0 0)
-             :size (Vec2 40 80)
-             :display [:image "src/editor/layerselect.png"]}
-            [
-              [:button
-                {:position (Vec2 0 16)
-                  :size (Vec2 40 32)
-                  :onclick #(self:set-layer-relative -1)}]
-              [:button
-                {:position (Vec2 0 48)
-                  :size (Vec2 40 32)
-                  :onclick #(self:set-layer-relative 1)}]]]))
+       (UI
+        [:node
+         {:position (Vec2 0 0)
+          :size (Vec2 0 0)}
+         [
+          [:node
+           {:position (Vec2 0 0)
+            :size (Vec2 40 80)
+            :display [:image "src/editor/layerselect.png"]}
+           [
+            [:button
+             {:position (Vec2 0 16)
+              :size (Vec2 40 32)
+              :onclick #(self:set-layer-relative -1)}]
+            [:button
+             {:position (Vec2 0 48)
+              :size (Vec2 40 32)
+              :onclick #(self:set-layer-relative 1)}]]]
+          [:button
+           {:position (Vec2 40 0)
+            :size (Vec2 64 64)
+            :display [:image-quad "src/editor/delete.png" 0 0 32 32]
+            :watch [self :mode]
+            :update
+            (fn [elem]
+            ;; increase the x of the image quad
+             (tset (. elem 2 :display) 3
+                   (case self.mode
+                     {:type nil} 0
+                     {:type :delete :many false} 32
+                     {:type :delete :many true} 64)))
+            :onclick #(self:next-delete-mode)}]]]))
   (set self.event-handlers [self.UI self]))
 
 (fn Editor.destructor []
   (love.keyboard.setKeyRepeat false))
+
+;; cycle thru delete modes
+(fn Editor.next-delete-mode [self]
+  (set self.mode
+       (case self.mode
+         {:type nil} {:type :delete :many false}
+         {:type :delete :many false} {:type :delete :many true}
+         {:type :delete :many true} {})))
 
 (fn Editor.get-transform [self]
   (util.transform-from-list
@@ -102,23 +130,30 @@
 
 (fn Editor.mousepressed [self x y button]
   (if
-   (= button 2)
-   (self.level:delete-object-at (self:get-mouse-tile (Vec2 x y)))
    (= button 3)
-   (set self.drag-mode {:type :scroll :last-pos (Vec2 x y)})))
+   (set self.panning {:last-pos (Vec2 x y)})
+   (= self.mode.type :delete)
+   (do
+     (self.level:delete-object-at (self:get-mouse-tile (Vec2 x y)))
+     (if (not self.mode.many)
+         (set self.mode {})))))
 
 (fn Editor.mousereleased [self x y]
-  (set self.drag-mode {}))
+  (if self.panning (set self.panning false)))
 
 (fn Editor.mousemoved [self x y]
-  (case self.drag-mode.type
-    nil (self.level:highlight-object-at (self:get-mouse-tile (Vec2 x y)))
-    :scroll (do
-              (set self.camera.center (- self.camera.center
-                                        (/
-                                         (- (Vec2 x y) self.drag-mode.last-pos)
-                                         self.camera.zoom)))
-              (set self.drag-mode.last-pos (Vec2 x y)))))
+  (if self.panning
+    (do
+      (set self.camera.center (- self.camera.center
+                                (/
+                                 (- (Vec2 x y) self.panning.last-pos)
+                                 self.camera.zoom)))
+      (set self.panning.last-pos (Vec2 x y)))
+    (case self.mode.type
+      nil
+      (self.level:highlight-object-at (self:get-mouse-tile (Vec2 x y)) [0 1 1])
+      :delete
+      (self.level:highlight-object-at (self:get-mouse-tile (Vec2 x y)) [1 0 0]))))
 
 (fn Editor.wheelmoved [self x y]
   (let [mousepos (Vec2 (love.mouse.getPosition))]

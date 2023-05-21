@@ -30,12 +30,11 @@
 (fn LevelMap.draw-tile [self pos]
   (let [tile-index (self:tile-index pos)
         tile (?. self.tile-map tile-index :tile)
-        color (if (. self.highlight-map tile-index)
-                  [1 0 0 1]
+        color (or (. self.highlight-map tile-index)
                   (?. self.tile-map tile-index :color))
         screen-pos (- (pos:project-to-screen) (Vec2 16 0))]
     (when (= tile 1)
-      (love.graphics.setColor (if color (unpack color) (values 1 1 1 1)))
+      (love.graphics.setColor (if color (unpack color) [1 1 1 1]))
       (love.graphics.draw self.tile-gfx screen-pos.x screen-pos.y))))
 
 (fn LevelMap.within-map-bounds? [self point]
@@ -84,20 +83,16 @@
 
 ;; highlight the object which contains a tile at pos
 ;; call with nothing to highlight nothing
-(fn LevelMap.highlight-object-at [self pos]
+(fn LevelMap.highlight-object-at [self pos color]
   (if pos
     (let [tile (self:get-tile pos)]
-      (set self.highlight-map tile.object.tile-mask))
+      (when tile (self:highlight-object tile.object color)))
     (set self.highlight-map [])))
 
 ;; highlight an object given its input data
-(fn LevelMap.highlight-object [self obj]
-  (set self.highlight-map [])
-  (let [obj (require (.. "objects/" obj.type))
-        set-tile (fn [pos]
-                   (tset self.highlight-map (self:tile-index pos) true))]
-    (obj.render {: set-tile}
-                obj)))
+(fn LevelMap.highlight-object [self obj color]
+  (set self.highlight-map
+       (collect [i _ (pairs obj.tile-mask)] (values i color))))
 
 (fn LevelMap.delete-object-at [self pos]
   (when pos

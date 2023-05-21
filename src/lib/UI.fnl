@@ -3,6 +3,7 @@
 
 (fn UI.constructor [tree]
   {:image-cache (Cache :image)
+   :quad-cache (Cache :quad)
    :root tree})
 
 (fn UI.instantiate [self tree]
@@ -65,6 +66,13 @@
                    color (or props.color [1 1 1 1])]
                (love.graphics.setColor color)
                (love.graphics.draw image pos.x pos.y 0 scale.x scale.y))
+      :image-quad (let [(_ image-path x y w h) (unpack display)
+                        image (self.image-cache:load image-path)
+                        quad (self.quad-cache:load image x y w h)
+                        scale (/ size (Vec2 w h))
+                        color (or props.color [1 1 1 1])]
+                    (love.graphics.setColor color)
+                    (love.graphics.draw image quad pos.x pos.y 0 scale.x scale.y))
       :none (do)
       _ (error (.. "Unknown display-type on " type ": " display-type)))
     (when children (each [_i child (ipairs children)]
