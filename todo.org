@@ -9,7 +9,9 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 ** TODO basic editing operatons
 *** DONE mouse hover tiles
 *** DONE mouse select cube
-*** TODO mouse delete cube
+*** DONE mouse delete cube
+*** TODO delete and re-render tiles
+*** TODO delete UI element
 *** TODO mouse add cube
 *** TODO mouse move cube
 *** TODO resize cube
@@ -24,6 +26,7 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 *** TODO ramps
 *** TODO tubes
 *** TODO loops??
+** TODO add right click menu
 ** TODO unify UI and scene model as game state tree
 ** TODO save/load maps
 * Backburner

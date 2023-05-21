@@ -58,6 +58,9 @@
                         (self:set-tile obj pos ...))}
                 obj)))
 
+(fn LevelMap.delete-object [self obj-data])
+
+
 ;; @obj: the source data table for the object which is setting the tile.
 ;; @value: which tile to set.
 (fn LevelMap.set-tile [self obj pos value props]
@@ -87,12 +90,24 @@
 
 ;; highlight an object given its input data
 (fn LevelMap.highlight-object [self obj]
-  (set self.highlight-map {})
+  (set self.highlight-map [])
   (let [obj (require (.. "objects/" obj.type))
         set-tile (fn [pos]
                    (tset self.highlight-map (self:tile-index pos) true))]
     (obj.render {: set-tile}
                 obj)))
+
+(fn LevelMap.delete-object-at [self pos]
+  (when pos
+    (let [tile (self:get-tile pos)]
+      (if tile
+       (self:delete-object tile.object)
+       (when (?. DEBUG :tiles)
+         (DEBUG.warn-with-traceback "Attempt to delete OOB tile" pos))))))
+
+(fn LevelMap.delete-object [self obj]
+  (each [index tile (pairs obj.tile-mask)]
+    (tset self.tile-map index nil)))
 
 ;; check an entire cube-shaped region based on a mouse position
 (fn LevelMap.get-tile-position-at [self point]

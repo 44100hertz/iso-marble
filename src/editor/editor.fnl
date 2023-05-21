@@ -47,6 +47,9 @@
   (let [tform (self:get-transform)]
     (Vec2 (tform:inverseTransformPoint point.x point.y))))
 
+(fn Editor.get-mouse-tile [self pos]
+  (self.level:get-tile-position-at (self:scale-mouse pos)))
+
 (fn Editor.adjust-zoom [self offset center-point]
   (let [next-zoom (+ self.camera.zoom offset)]
    (if (and (>= next-zoom 0.5) (<= next-zoom 8))
@@ -98,16 +101,18 @@
   (when (. self.key-binds scancode) ((. self.key-binds scancode) self modifiers)))
 
 (fn Editor.mousepressed [self x y button]
-  (if (= button 3)
-    (set self.drag-mode {:type :scroll :last-pos (Vec2 x y)})))
+  (if
+   (= button 2)
+   (self.level:delete-object-at (self:get-mouse-tile (Vec2 x y)))
+   (= button 3)
+   (set self.drag-mode {:type :scroll :last-pos (Vec2 x y)})))
 
 (fn Editor.mousereleased [self x y]
   (set self.drag-mode {}))
 
 (fn Editor.mousemoved [self x y]
   (case self.drag-mode.type
-    nil (self.level:highlight-object-at
-         (self.level:get-tile-position-at (self:scale-mouse (Vec2 x y))))
+    nil (self.level:highlight-object-at (self:get-mouse-tile (Vec2 x y)))
     :scroll (do
               (set self.camera.center (- self.camera.center
                                         (/
