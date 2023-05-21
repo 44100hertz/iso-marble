@@ -5,12 +5,32 @@
   {:image-cache (Cache :image)
    :root tree})
 
+(fn UI.instantiate [self tree]
+  (self:update-element self.root))
+
 (fn UI.mousepressed [self ...]
   (self:propagate-mouse-event self.root (Vec2 0 0) [:mousepressed ...]))
 
+;; Call 'update' on an element, which should set its contents to the correct
+;; stuff.
+(fn UI.update-element [self elem]
+  (let [(type props children) (unpack elem)]
+    (when props.update (props.update elem))
+    (when props.watch
+      (let [[table index] props.watch]
+        (set props.watch-prev (. table index))))
+    (when children (each [_i child (ipairs children)]
+                     (self:update-element child)))))
+
+;; return true if a watched value is different than it was before
+(fn UI.check-watch [self props]
+  (when props.watch
+      (let [[table index] props.watch]
+        (not= (. table index) props.watch-prev))))
+
 ;; traverses the tree children-first, testing if the mouse is in their regions
 (fn UI.propagate-mouse-event [self elem offset event]
-  (let [(type props children) (unpack elem)
+  (let [[type props children] elem
         {: position : size : display} props
         pos (+ position offset)
         (_ x y button) (unpack event)
@@ -23,7 +43,7 @@
              props.onclick
              (mouse-pos:within-rectangle pos size))
         (do
-          (props:onclick x y button)
+          (props.onclick elem x y button)
           true)
         child-has-mouse)))
 
@@ -32,10 +52,11 @@
 
 ;; traverses the tree parents-first, drawing everything
 (fn UI.draw-element [self elem offset]
-  (let [(type props children) (unpack elem)
+  (let [[type props children] elem
         {: position : size : display} props
         pos (+ position offset)
         display-type (if display (. display 1) :none)]
+    (if (self:check-watch props) (self:update-element elem))
     (case display-type
       :image (let [(_ image-path) (unpack display)
                    image (self.image-cache:load image-path)
@@ -47,6 +68,6 @@
       :none (do)
       _ (error (.. "Unknown display-type on " type ": " display-type)))
     (when children (each [_i child (ipairs children)]
-                     (UI:draw-element child pos)))))
+                     (self:draw-element child pos)))))
 
 UI
