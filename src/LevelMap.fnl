@@ -49,10 +49,14 @@
    (* self.map.size.x self.map.size.z y)))
 
 ;; turn an object into tiles
-(fn LevelMap.render-object [self obj-data]
-  (let [obj (require (.. "objects/" obj-data.type))]
-    (obj.render {:set-tile #(self:set-tile obj-data $...)}
-                obj-data)))
+(fn LevelMap.render-object [self obj]
+  (let [renderer (require (.. "objects/" obj.type))]
+    (set obj.tile-mask [])
+    (renderer.render {:set-tile
+                      (fn [pos ...]
+                        (tset obj.tile-mask (self:tile-index pos) true)
+                        (self:set-tile obj pos ...))}
+                obj)))
 
 ;; @obj: the source data table for the object which is setting the tile.
 ;; @value: which tile to set.
@@ -74,21 +78,21 @@
       (. self.tile-map index))))
 
 ;; highlight the object which contains a tile at pos
+;; call with nothing to highlight nothing
 (fn LevelMap.highlight-object-at [self pos]
   (if pos
     (let [tile (self:get-tile pos)]
-      (when tile
-        (self:highlight-object tile.object)))
-    (set self.highlight-map {})))
+      (set self.highlight-map tile.object.tile-mask))
+    (set self.highlight-map [])))
 
 ;; highlight an object given its input data
-(fn LevelMap.highlight-object [self obj-data]
+(fn LevelMap.highlight-object [self obj]
   (set self.highlight-map {})
-  (let [obj (require (.. "objects/" obj-data.type))
-        set-tile (lambda [pos _value _props]
+  (let [obj (require (.. "objects/" obj.type))
+        set-tile (fn [pos]
                    (tset self.highlight-map (self:tile-index pos) true))]
     (obj.render {: set-tile}
-                obj-data)))
+                obj)))
 
 ;; check an entire cube-shaped region based on a mouse position
 (fn LevelMap.get-tile-position-at [self point]
