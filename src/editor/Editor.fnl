@@ -105,6 +105,7 @@
      :a (fn [self] (self:set-layer-relative 1))
      "=" #(Editor.adjust-zoom $1 1)
      "-" #(Editor.adjust-zoom $1 -1)
+     :x #(Editor.next-delete-mode $1)
      :up (fn [self modifiers] (set-scroll self (Vec2 0 -1) modifiers.shift))
      :down (fn [self modifiers] (set-scroll self (Vec2 0 1) modifiers.shift))
      :left (fn [self modifiers] (set-scroll self (Vec2 -1 0) modifiers.shift))
