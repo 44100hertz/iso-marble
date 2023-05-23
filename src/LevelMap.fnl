@@ -53,8 +53,9 @@
     (set obj.tile-mask [])
     (renderer.render {:set-tile
                       (fn [pos ...]
-                        (tset obj.tile-mask (self:tile-index pos) true)
-                        (self:set-tile obj pos ...))}
+                        (when (self:within-map-bounds? pos)
+                          (tset obj.tile-mask (self:tile-index pos) true)
+                          (self:set-tile obj pos ...)))}
                 obj)))
 
 (fn LevelMap.delete-object [self obj-data])
