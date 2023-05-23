@@ -22,7 +22,7 @@
                  instance))})))
 
 (fn util.get-class [object]
-  (. (getmetatable object) :__class))
+  (?. (getmetatable object) :__class))
 
 (set util.clamp util.lume.clamp)
 
