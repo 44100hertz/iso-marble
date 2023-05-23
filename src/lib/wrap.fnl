@@ -8,7 +8,15 @@
 (fn _G.pp [x] (print (fennel.view x)))
 (local pp _G.pp)
 
-(set _G.DEBUG {:tiles true})
+(set _G.DEBUG {
+               :tiles true
+               :editor-add-object true
+               :editor-mouse-select false
+               :render-object false})
+
+(fn _G.DEBUG.info [...]
+  (each [_ msg (ipairs [...])]
+    (pp msg)))
 (fn _G.DEBUG.warn-with-traceback [...]
   (each [_ msg (ipairs [...])]
     (pp msg))

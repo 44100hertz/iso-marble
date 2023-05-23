@@ -6,10 +6,10 @@
 (fn Editor.constructor [{: screen-size} levelname]
   (love.keyboard.setKeyRepeat true)
   {:level (LevelMap levelname)
+   :add-object {:type :cube :pos (Vec3 0 0 0) :size (Vec3 1 1 1) :color "green"}
    :layer-index 1
    :camera {:center (Vec2 100 0) :zoom 4} ;; boundaries of camera
    :scroll-rate 8
-   :show-layer false
    :panning false
    :mode {}})
 
@@ -43,10 +43,23 @@
             ;; increase the x of the image quad
              (tset (. elem 2 :display) 3
                    (case self.mode
-                     {:type nil} 0
                      {:type :delete :many false} 32
-                     {:type :delete :many true} 64)))
-            :onclick #(self:next-delete-mode)}]]]))
+                     {:type :delete :many true} 64
+                     _ 0)))
+            :onclick #(self:next-delete-mode)}]
+          [:button
+           {:position (Vec2 104 0)
+            :size (Vec2 64 64)
+            :display [:image-quad "src/editor/add.png" 0 0 32 32]
+            :watch [self :mode]
+            :update
+            (fn [elem]
+            ;; increase the x of the image quad
+             (tset (. elem 2 :display) 3
+                   (case self.mode
+                     {:type :add} 32
+                     _ 0)))
+            :onclick #(self:toggle-add-mode)}]]]))
   (set self.event-handlers [self.UI self]))
 
 (fn Editor.destructor []
@@ -56,9 +69,18 @@
 (fn Editor.next-delete-mode [self]
   (set self.mode
        (case self.mode
-         {:type nil} {:type :delete :many false}
          {:type :delete :many false} {:type :delete :many true}
-         {:type :delete :many true} {})))
+         {:type :delete :many true} {}
+         _ {:type :delete :many false})))
+
+(fn Editor.toggle-add-mode [self]
+  (set self.mode
+       (case self.mode
+         {:type :add}
+         (do
+           (self.level:delete-object self.add-object)
+           {})
+         _ {:type :add})))
 
 (fn Editor.get-transform [self]
   (util.transform-from-list
@@ -71,12 +93,12 @@
   (util.with-transform (self:get-transform) f))
 
 ;; Scales the mouse position in accordance with zoom/scroll
-(fn Editor.scale-mouse [self point]
+(fn Editor.mouse-to-ingame-pos [self point]
   (let [tform (self:get-transform)]
     (Vec2 (tform:inverseTransformPoint point.x point.y))))
 
 (fn Editor.get-mouse-tile [self pos]
-  (self.level:get-tile-position-at (self:scale-mouse pos)))
+  (self.level:get-tile-position-at (self:mouse-to-ingame-pos pos)))
 
 (fn Editor.adjust-zoom [self offset center-point]
   (let [next-zoom (+ self.camera.zoom offset)]
@@ -101,10 +123,11 @@
                   (* offset
                      self.scroll-rate
                      (if is-shifted 8 1)))))]
-    {:q (fn [self] (self:set-layer-relative -1))
-     :a (fn [self] (self:set-layer-relative 1))
+    {:w (fn [self] (self:set-layer-relative -1))
+     :s (fn [self] (self:set-layer-relative 1))
      "=" #(Editor.adjust-zoom $1 1)
      "-" #(Editor.adjust-zoom $1 -1)
+     :a #(Editor.toggle-add-mode $1)
      :x #(Editor.next-delete-mode $1)
      :up (fn [self modifiers] (set-scroll self (Vec2 0 -1) modifiers.shift))
      :down (fn [self modifiers] (set-scroll self (Vec2 0 1) modifiers.shift))
@@ -113,8 +136,8 @@
 
 (fn Editor.draw-map [self]
   (for [i self.level.map.size.y 0 -1]
-    (when (and self.show-layer (= i self.layer-index))
-      (util.with-color-rgba 1 0 0 0.2
+    (when (and (= self.mode.type :add) (= i self.layer-index))
+      (util.with-color-rgba 0 0 1 0.2
         (let [(x y) (love.window.getMode)]
           #(love.graphics.rectangle :fill 0 0 x y))))
     (self:with-camera #(self.level:draw-layer i))))
@@ -133,14 +156,27 @@
   (if
    (= button 3)
    (set self.panning {:last-pos (Vec2 x y)})
+
    (= self.mode.type :delete)
    (do
      (self.level:delete-object-at (self:get-mouse-tile (Vec2 x y)))
      (if (not self.mode.many)
-         (set self.mode {})))))
+         (set self.mode {})))
+
+   (= self.mode.type :add)
+   (do
+     (self.level:render-object (util.deep-copy self.add-object))
+     (if (?. _G.DEBUG :editor-add-object)
+         (_G.DEBUG.info "Added " self.add-object)))))
 
 (fn Editor.mousereleased [self x y]
   (if self.panning (set self.panning false)))
+
+(fn Editor.highlight-object-xy [self x y color]
+  (local found-object-pos
+         (self.level:highlight-object-at (self:get-mouse-tile (Vec2 x y)) color))
+  (if (and found-object-pos (?. _G.DEBUG :editor-mouse-select))
+      (_G.DEBUG.info "Highlight Tile: " (self.level:get-tile found-object-pos))))
 
 (fn Editor.mousemoved [self x y]
   (if self.panning
@@ -152,12 +188,21 @@
       (set self.panning.last-pos (Vec2 x y)))
     (case self.mode.type
       nil
-      (self.level:highlight-object-at (self:get-mouse-tile (Vec2 x y)) [0 1 1])
+      (self:highlight-object-xy x y [0 1 1])
       :delete
-      (self.level:highlight-object-at (self:get-mouse-tile (Vec2 x y)) [1 0 0]))))
+      (self:highlight-object-xy x y [1 0 0])
+      :add
+      (let [ingame-pos (self:mouse-to-ingame-pos (Vec2 x y))
+            layer-pos (ingame-pos:intersect-xz-plane self.layer-index)
+            tile-pos (layer-pos:map math.floor)]
+       (when self.mode.object-added
+         (self.level:delete-object self.add-object))
+       (set self.add-object.pos tile-pos)
+       (self.level:render-object self.add-object)
+       (set self.mode.object-added true)))))
 
 (fn Editor.wheelmoved [self x y]
   (let [mousepos (Vec2 (love.mouse.getPosition))]
-    (self:adjust-zoom y (self:scale-mouse mousepos))))
+    (self:adjust-zoom y (self:mouse-to-ingame-pos mousepos))))
 
 Editor

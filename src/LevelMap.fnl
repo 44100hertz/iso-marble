@@ -56,7 +56,9 @@
                         (when (self:within-map-bounds? pos)
                           (tset obj.tile-mask (self:tile-index pos) true)
                           (self:set-tile obj pos ...)))}
-                obj)))
+                obj)
+    (if (?. _G.DEBUG :render-object)
+        (_G.DEBUG.info "Rendered " obj))))
 
 ;; @obj: the source data table for the object which is setting the tile.
 ;; @value: which tile to set.
@@ -84,7 +86,9 @@
 (fn LevelMap.highlight-object-at [self pos color]
   (if pos
     (let [tile (self:get-tile pos)]
-      (when tile (self:highlight-object tile.object color)))
+      (when tile
+        (self:highlight-object tile.object color)
+        pos))
     (set self.highlight-map [])))
 
 ;; highlight an object given its input data
