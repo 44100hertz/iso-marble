@@ -37,7 +37,7 @@
 (fn love.load [args]
   (love.graphics.setDefaultFilter :nearest :nearest)
   (set call-table {: set-mode})
-  (set-mode :src.editor.editor "test")
+  (set-mode :src.editor.Editor "test")
   (when (~= :web (. args 1)) (repl.start)))
 
 (fn love.draw []
