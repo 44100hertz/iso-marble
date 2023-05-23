@@ -75,7 +75,21 @@
   (and
    (> self.x pos.x) (< self.x (+ pos.x size.x))
    (> self.y pos.y) (< self.y (+ pos.y size.y))))
-(fn Vec2.project-from-screen [{:x screen-x :y screen-y} y]
+
+;; intersect a ray from the screen with a plane where x=x
+(fn Vec2.intersect-xy-plane [{:x screen-x :y screen-y} z]
+  (_G.Vec3 (+ z (/ screen-x 16))
+           (+ (/ screen-x -32) (/ screen-y 16) (- z))
+           z))
+
+;; intersect a ray from the screen with a plane where x=x
+(fn Vec2.intersect-yz-plane [{:x screen-x :y screen-y} x]
+  (_G.Vec3 x
+           (+ (/ screen-x 32) (/ screen-y 16) (- x))
+           (- x (/ screen-x 16))))
+
+;; intersect a ray from the screen with a plane with z=z
+(fn Vec2.intersect-xz-plane [{:x screen-x :y screen-y} y]
   (_G.Vec3 (+ (/ screen-y 16) (/ screen-x 32) (- y))
            y
            (+ (/ screen-y 16) (/ screen-x -32) (- y))))

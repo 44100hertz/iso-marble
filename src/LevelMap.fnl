@@ -115,16 +115,18 @@
 
 ;; check an entire cube-shaped region based on a mouse position
 (fn LevelMap.get-tile-position-at [self point]
-    ;; cast a ray from the screen, check if it intersects with a tile at an
-    ;; obscene number of points, to figure out what the mouse is pointing at
     (var found-tile-pos false)
-    (for [layer 0 self.map.size.y (/ 1 128) &until found-tile-pos]
-      (let [layer-pos (point:project-from-screen layer)
-            tile-pos (layer-pos:map math.floor)]
+    (for [layer 0 self.map.size.y 1 &until found-tile-pos]
+      (let [tile-at-plane-intersection
+            (fn [intersect-fn offset]
+              (let [intersect ((. point intersect-fn) point layer)
+                    tile-pos (+ (intersect:map math.floor) offset)]
+                (and (self:get-tile tile-pos) tile-pos)))]
         (set found-tile-pos
-             (and (layer-pos:within tile-pos (Vec3 1 1 1))
-                  (self:get-tile tile-pos)
-                  tile-pos))))
+             (or
+              (tile-at-plane-intersection :intersect-xz-plane (Vec3 0 0 0))
+              (tile-at-plane-intersection :intersect-yz-plane (Vec3 -1 0 0))
+              (tile-at-plane-intersection :intersect-xy-plane (Vec3 0 0 -1))))))
     found-tile-pos)
 
 LevelMap
