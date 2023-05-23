@@ -58,9 +58,6 @@
                           (self:set-tile obj pos ...)))}
                 obj)))
 
-(fn LevelMap.delete-object [self obj-data])
-
-
 ;; @obj: the source data table for the object which is setting the tile.
 ;; @value: which tile to set.
 (fn LevelMap.set-tile [self obj pos value props]
