@@ -78,7 +78,8 @@
        (case self.mode
          {:type :add}
          (do
-           (self.level:delete-object self.add-object)
+           (if self.mode.object-added
+               (self.level:delete-object self.add-object))
            {})
          _ {:type :add})))
 
