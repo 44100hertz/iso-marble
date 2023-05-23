@@ -11,7 +11,7 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 *** DONE mouse select cube
 *** DONE mouse delete cube
 *** DONE delete and re-render tiles
-*** TODO delete all references to deleted object within last-tile
+*** DONE delete all references to deleted object within last-tile
 *** TODO delete UI element
 **** DONE add visible delete element
 **** TODO make x key do delete

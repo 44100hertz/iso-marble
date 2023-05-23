@@ -65,13 +65,13 @@
 (fn LevelMap.set-tile [self obj pos value props]
   (if (self:within-map-bounds? pos)
       (do
-        (let [tile-index (self:tile-index pos)]
+        (let [tile-index (self:tile-index pos)
+              prev-tile (. self.tile-map tile-index)]
           (tset self.tile-map tile-index
                 {:object obj
                  :tile value
                  :color (. self :map :colormap props.color)
-                 ;; if overwriting tile, keep track of previous tile
-                 :last-tile (. self.tile-map tile-index)})))
+                 : prev-tile})))
       (when (?. DEBUG :tiles)
         (DEBUG.warn-with-traceback "Attempt to set out of bounds tile" pos value))))
 
@@ -103,15 +103,18 @@
          (DEBUG.warn-with-traceback "Attempt to delete OOB tile" pos))))))
 
 (fn LevelMap.delete-object [self obj]
-  (each [index tile (pairs obj.tile-mask)]
-    ;; last-tile is typically nil, but if a tile has been overwritten, then
-    ;; last-tile will be the tile that was overwritten. If the tile that was
-    ;; overwritten doesn't belong to the object being deleted, then the tile
-    ;; being deleted should be set to that tile instead of nullified. Otherwise,
-    ;; it is already correct and the tile will not be modified.
-    (let [last-tile (. self.tile-map index :last-tile)]
-      (when (or (not last-tile) (~= last-tile.object obj))
-        (tset self.tile-map index last-tile)))))
+  (each [index _ (pairs obj.tile-mask)]
+    (let [tile (. self.tile-map index)]
+      (tset self.tile-map index (self:tile-without-obj tile obj)))))
+
+;; Remove all references to a given object from a tile, and return the modified
+;; tile.
+(fn LevelMap.tile-without-obj [self tile obj]
+  (if (= tile.object obj)
+      tile.prev-tile
+      (do
+        (set tile.prev-tile (self:tile-without-obj tile.prev-tile obj))
+        tile)))
 
 ;; check an entire cube-shaped region based on a mouse position
 (fn LevelMap.get-tile-position-at [self point]
