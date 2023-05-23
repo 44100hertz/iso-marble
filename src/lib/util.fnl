@@ -13,13 +13,16 @@
 ;; that requires methods to be bound.
 (fn util.class [class]
   (let [class (if class class {})]
-    (set class.mt {:__index class})
+    (set class.mt {:__index class :__class class})
     (setmetatable
      class
      {:__call (fn [_class ...]
                 (let [instance (setmetatable (class.constructor ...) class.mt)]
                  (when class.instantiate (instance:instantiate ...))
                  instance))})))
+
+(fn util.get-class [object]
+  (. (getmetatable object) :__class))
 
 (set util.clamp util.lume.clamp)
 
@@ -61,5 +64,14 @@
 
 ;; take any number of tables and combine them
 (set util.union util.lume.merge)
+
+(fn util.deep-copy [obj]
+  (case (type obj)
+    :table (let [copy (collect [k v (pairs obj)]
+                        (values k (util.deep-copy v)))]
+             (if (util.get-class obj)
+                 (setmetatable copy (getmetatable obj))
+                 obj))
+    _ obj))
 
 (set _G.util util)
