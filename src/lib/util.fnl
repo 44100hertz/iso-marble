@@ -71,7 +71,7 @@
                         (values k (util.deep-copy v)))]
              (if (util.get-class obj)
                  (setmetatable copy (getmetatable obj))
-                 obj))
+                 copy))
     _ obj))
 
 (set _G.util util)
