@@ -84,12 +84,11 @@
 ;; highlight the object which contains a tile at pos
 ;; call with nothing to highlight nothing
 (fn LevelMap.highlight-object-at [self pos color]
-  (if pos
-    (let [tile (self:get-tile pos)]
-      (when tile
-        (self:highlight-object tile.object color)
-        pos))
-    (set self.highlight-map [])))
+   (set self.highlight-map [])
+   (let [tile (and pos (self:get-tile pos))]
+     (when tile
+           (self:highlight-object tile.object color)
+           pos)))
 
 ;; highlight an object given its input data
 (fn LevelMap.highlight-object [self obj color]
@@ -123,15 +122,17 @@
     (var found-tile-pos false)
     (for [layer 0 self.map.size.y 1 &until found-tile-pos]
       (let [tile-at-plane-intersection
-            (fn [intersect-fn offset]
-              (let [intersect ((. point intersect-fn) point layer)
-                    tile-pos (+ (intersect:map math.floor) offset)]
+            (fn [intersect-fn invert offset]
+              (let [layer (if invert (- self.map.size.y layer) layer)
+                    layer (+ offset layer)
+                    intersect ((. point (.. "locate-mouse-with-" intersect-fn)) point layer)
+                    tile-pos (+ (intersect:map math.floor))]
                 (and (self:get-tile tile-pos) tile-pos)))]
         (set found-tile-pos
              (or
-              (tile-at-plane-intersection :intersect-xz-plane (Vec3 0 0 0))
-              (tile-at-plane-intersection :intersect-yz-plane (Vec3 -1 0 0))
-              (tile-at-plane-intersection :intersect-xy-plane (Vec3 0 0 -1))))))
+              (tile-at-plane-intersection :x true -1)
+              (tile-at-plane-intersection :y false 0)
+              (tile-at-plane-intersection :z true -1)))))
     found-tile-pos)
 
 LevelMap

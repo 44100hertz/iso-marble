@@ -194,7 +194,7 @@
       (self:highlight-object-xy x y [1 0 0])
       :add
       (let [ingame-pos (self:mouse-to-ingame-pos (Vec2 x y))
-            layer-pos (ingame-pos:intersect-xz-plane self.layer-index)
+            layer-pos (ingame-pos:locate-mouse-with-y self.layer-index)
             tile-pos (layer-pos:map math.floor)]
        (when self.mode.object-added
          (self.level:delete-object self.add-object))

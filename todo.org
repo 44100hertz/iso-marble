@@ -20,7 +20,7 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 **** DONE actually select added objects
 **** DONE actually add object on click
 **** TODO show grid for layers, instead of semitransparent fill
-*** TODO actually highlight the object most in front, given multiple
+*** DONE actually highlight the object most in front, given multiple
 *** TODO mouse move cube
 *** TODO resize cube
 ** DONE change tile layout to be 1-dimensional

@@ -76,23 +76,23 @@
    (> self.x pos.x) (< self.x (+ pos.x size.x))
    (> self.y pos.y) (< self.y (+ pos.y size.y))))
 
-;; intersect a ray from the screen with a plane where x=x
-(fn Vec2.intersect-xy-plane [{:x screen-x :y screen-y} z]
-  (_G.Vec3 (+ z (/ screen-x 16))
-           (+ (/ screen-x -32) (/ screen-y 16) (- z))
-           z))
-
-;; intersect a ray from the screen with a plane where x=x
-(fn Vec2.intersect-yz-plane [{:x screen-x :y screen-y} x]
-  (_G.Vec3 x
+;; mouse-in a ray from the screen with plane x=x
+(fn Vec2.locate-mouse-with-x [{:x screen-x :y screen-y} x]
+  (_G.Vec3 (- x 1)
            (+ (/ screen-x 32) (/ screen-y 16) (- x))
            (- x (/ screen-x 16))))
 
-;; intersect a ray from the screen with a plane with z=z
-(fn Vec2.intersect-xz-plane [{:x screen-x :y screen-y} y]
+;; mouse-in a ray from the screen with plane y=y
+(fn Vec2.locate-mouse-with-y [{:x screen-x :y screen-y} y]
   (_G.Vec3 (+ (/ screen-y 16) (/ screen-x 32) (- y))
            y
            (+ (/ screen-y 16) (/ screen-x -32) (- y))))
+
+;; mouse-in a ray from the screen with plane z=z
+(fn Vec2.locate-mouse-with-z [{:x screen-x :y screen-y} z]
+  (_G.Vec3 (+ z (/ screen-x 16))
+           (+ (/ screen-x -32) (/ screen-y 16) (- z))
+           (- z 1)))
 
 (var Vec3 (util.class))
 (fn Vec3.constructor [x y z] {: x :y (if y y x) :z (if z z x)})
