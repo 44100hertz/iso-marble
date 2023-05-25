@@ -23,7 +23,7 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 **** DONE show grid for layers, instead of semitransparent fill
 *** DONE actually highlight the object most in front, given multiple
 *** DONE press i to "eye-drop"
-*** TODO "move mode" to delete, pick, then add
+*** DONE "move mode" to delete, pick, then add
 *** TODO resize cube
 ** TODO advanced editing operations
 *** TODO mouse move multiple objects
