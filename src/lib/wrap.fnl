@@ -32,30 +32,30 @@
 (require :src.lib.Vec) ;; creates global Vec2 and Vec3
 
 (var call-table {}) ;; set of utility functions passed in as second argument of
-                    ;; mode calls for the constructor, update, and draw
+                    ;; scene calls for the constructor, update, and draw
 
-;; set the first mode
-(var (mode mode-name) nil)
+;; set the first scene
+(var (scene scene-name) nil)
 
-(fn set-mode [new-mode-name ...]
-  (when (?. mode :destructor) (pcall mode.destructor mode ...))
-  (set mode ((require new-mode-name) call-table ...))
-  (set mode-name new-mode-name))
+(fn set-scene [new-scene-name ...]
+  (when (?. scene :destructor) (pcall scene.destructor scene ...))
+  (set scene ((require new-scene-name) call-table ...))
+  (set scene-name new-scene-name))
 
 (fn love.load [args]
   (love.graphics.setDefaultFilter :nearest :nearest)
-  (set call-table {: set-mode})
-  (set-mode :src.editor.Editor "test")
+  (set call-table {: set-scene})
+  (set-scene :src.editor.Editor "test")
   (when (~= :web (. args 1)) (repl.start)))
 
 (fn love.draw []
   (love.graphics.clear)
   (love.graphics.setColor 1 1 1)
-  (mode:draw call-table))
+  (scene:draw call-table))
 
 (fn love.update [dt]
-  (when mode.update
-    (mode:update (_G.util.union {: dt} call-table))))
+  (when scene.update
+    (scene:update (_G.util.union {: dt} call-table))))
 
 ;; Try to handle an event using a list of handlers, which are objects (class
 ;; instances) containing methods with the same name and args as the event in
@@ -66,12 +66,12 @@
   (each [_i handler (ipairs handlers) &until stop]
     (set stop (and (. handler event) ((. handler event) handler (unpack args))))))
 
-;; When an event occurs, first check if the mode has a list of event handlers,
+;; When an event occurs, first check if the scene has a list of event handlers,
 ;; and bubble the event thru the handlers. If there are no event handlers, then
-;; it will simply call the function on the mode, if it exists.
+;; it will simply call the function on the scene, if it exists.
 (fn handle-event [event-name ...]
-  (if mode.event-handlers (event-with-bubble event-name [...] mode.event-handlers)
-      (. mode event-name) ((. mode event-name) mode ...)))
+  (if scene.event-handlers (event-with-bubble event-name [...] scene.event-handlers)
+      (. scene event-name) ((. scene event-name) scene ...)))
 
 ;; Handle all basic events without transforming the input args
 (local basic-events {:mousepressed true
