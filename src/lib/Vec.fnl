@@ -78,21 +78,21 @@
 
 ;; mouse-in a ray from the screen with plane x=x
 (fn Vec2.locate-mouse-with-x [{:x screen-x :y screen-y} x]
-  (_G.Vec3 (- x 1)
-           (+ (/ screen-x 32) (/ screen-y 16) (- x))
+  (_G.Vec3 x
+           (+ (/ screen-x -32) (/ screen-y -16) x 1)
            (- x (/ screen-x 16))))
 
 ;; mouse-in a ray from the screen with plane y=y
 (fn Vec2.locate-mouse-with-y [{:x screen-x :y screen-y} y]
-  (_G.Vec3 (+ (/ screen-y 16) (/ screen-x 32) (- y))
+  (_G.Vec3 (+ (/ screen-y 16) (/ screen-x 32) y)
            y
-           (+ (/ screen-y 16) (/ screen-x -32) (- y))))
+           (+ (/ screen-y 16) (/ screen-x -32) y)))
 
 ;; mouse-in a ray from the screen with plane z=z
 (fn Vec2.locate-mouse-with-z [{:x screen-x :y screen-y} z]
   (_G.Vec3 (+ z (/ screen-x 16))
-           (+ (/ screen-x -32) (/ screen-y 16) (- z))
-           (- z 1)))
+           (+ (/ screen-x 32) (/ screen-y -16) z 1)
+           z))
 
 (var Vec3 (util.class))
 (fn Vec3.constructor [x y z] {: x :y (if y y x) :z (if z z x)})
@@ -100,7 +100,7 @@
 (generate-operators! Vec3 [:x :y :z])
 (fn Vec3.project-to-screen [{: x : y : z}]
   (Vec2 (* 16 (- x z))
-        (* 16 (+ y (/ (+ x z) 2)))))
+        (* 16 (+ (- y) (/ (+ x z) 2)))))
 (fn Vec3.within [self pos size]
   (and
    (>= self.x pos.x) (< self.x (+ pos.x size.x))

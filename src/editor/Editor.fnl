@@ -288,15 +288,16 @@
         (set self.camera.center
            (util.lume.lerp self.camera.center center-point 0.5)))))))
 
+(fn Editor.set-layer-relative [self amount]
+  (self:set-layer (+ self.cursor-object.pos.y (- amount))))
+
 (fn Editor.set-layer [self layer]
   (set self.cursor-object.pos.y (util.clamp layer 0 self.level.map.size.y))
-  (self.level:render-object self.cursor-object))
-
-(fn Editor.set-layer-relative [self amount]
-  (self:set-layer (+ self.cursor-object.pos.y amount)))
+  (if (= self.mode.type :add)
+    (self.level:render-object self.cursor-object)))
 
 (fn Editor.draw-map [self]
-  (for [i self.level.map.size.y 0 -1]
+  (for [i 0 self.level.map.size.y]
     (when (and (= self.mode.type :add) (= i self.cursor-object.pos.y))
       (self:draw-grid i))
     (self:with-camera #(self.level:draw-layer i))))

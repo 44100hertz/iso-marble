@@ -6,6 +6,7 @@
      :tile-gfx (love.graphics.newImage (.. "levels/" levelname "/tiles.png"))
      :tile-map {}
      :highlight-map {}
+     :tile-masks {}
      :scroll (Vec2 80 0)}))
 
 (fn LevelMap.instantiate [self]
@@ -19,7 +20,7 @@
         (self:render-object obj-data)))
 
 (fn LevelMap.draw-map [self]
-  (for [i (length self.layers) 0 -1]
+  (for [i 0 (length self.layers)]
     (self:draw-layer i)))
 
 (fn LevelMap.draw-layer [self layer-index]
@@ -50,18 +51,19 @@
 (fn LevelMap.render-object [self obj]
   ;; turn an object into tiles
   ;; delete pre-existing object
-  (if obj.tile-mask (self:delete-object obj))
+  (if (. self.tile-masks obj)
+    (self:delete-object obj))
   ;; render object
   (let [renderer (require (.. "objects/" obj.type))]
-      (set obj.tile-mask [])
-      (renderer.render {:set-tile
-                        (fn [pos ...]
-                          (when (self:within-map-bounds? pos)
-                            (tset obj.tile-mask (self:tile-index pos) true)
-                            (self:set-tile obj pos ...)))}
-                  obj)
-      (if (?. _G.DEBUG :render-object)
-          (_G.DEBUG.info "Rendered " obj))))
+    (tset self.tile-masks obj [])
+    (renderer.render {:set-tile
+                      (fn [pos ...]
+                        (when (self:within-map-bounds? pos)
+                          (tset (. self.tile-masks obj) (self:tile-index pos) true)
+                          (self:set-tile obj pos ...)))}
+                obj)
+    (if (?. _G.DEBUG :render-object)
+        (_G.DEBUG.info "Rendered " obj))))
 
 (fn LevelMap.set-tile [self obj pos value props]
   ;; @obj: the source data table for the object which is setting the tile.
@@ -97,7 +99,7 @@
   (set self.highlight-map [])
   (when obj
     (set self.highlight-map
-         (collect [i _ (pairs obj.tile-mask)] (values i color)))))
+         (collect [i _ (pairs (. self.tile-masks obj))] (values i color)))))
 
 (fn LevelMap.delete-object-at [self pos]
   (when pos
@@ -108,10 +110,10 @@
          (DEBUG.warn-with-traceback "Attempt to delete OOB tile" pos))))))
 
 (fn LevelMap.delete-object [self obj]
-  (each [index _ (pairs obj.tile-mask)]
+  (each [index _ (pairs (. self.tile-masks obj))]
     (let [tile (. self.tile-map index)]
       (tset self.tile-map index (self:tile-without-object tile obj))))
-  (set obj.tile-mask nil))
+  (tset self.tile-masks obj nil))
 
 (fn LevelMap.tile-without-object [self tile obj]
   ;; Remove all references to a given object from a tile, and return the
@@ -125,19 +127,20 @@
 (fn LevelMap.get-tile-position-at [self point]
   ;; check an entire cube-shaped region based on a mouse position
   (var found-tile-pos false)
-  (for [layer 0 self.map.size.y 1 &until found-tile-pos]
+  (for [layer self.map.size.y 0 -1 &until found-tile-pos]
     (let [tile-at-plane-intersection
-          (fn [intersect-fn invert offset]
-            (let [layer (if invert (- self.map.size.y layer) layer)
-                  layer (+ offset layer)
-                  intersect ((. point (.. "locate-mouse-with-" intersect-fn)) point layer)
-                  tile-pos (+ (intersect:map math.floor))]
-              (and (self:get-tile tile-pos) tile-pos)))]
+          (fn [intersect-fn offset]
+            (let [intersect ((. point (.. "locate-mouse-with-" intersect-fn)) point layer)
+                  tile-pos (+ offset (intersect:map math.floor))
+                  got-tile (and (self:get-tile tile-pos) tile-pos)]
+              (when got-tile
+                (pp [layer intersect-fn tile-pos])
+                got-tile)))]
       (set found-tile-pos
            (or
-            (tile-at-plane-intersection :x true -1)
-            (tile-at-plane-intersection :y false 0)
-            (tile-at-plane-intersection :z true -1)))))
+            (tile-at-plane-intersection :x (Vec3 -1 0 0))
+            (tile-at-plane-intersection :y 0)
+            (tile-at-plane-intersection :z (Vec3 0 0 -1))))))
   found-tile-pos)
 
 LevelMap
