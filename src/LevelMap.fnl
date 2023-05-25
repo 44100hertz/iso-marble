@@ -84,16 +84,17 @@
 ;; highlight the object which contains a tile at pos
 ;; call with nothing to highlight nothing
 (fn LevelMap.highlight-object-at [self pos color]
-   (set self.highlight-map [])
-   (let [tile (and pos (self:get-tile pos))]
-     (when tile
-           (self:highlight-object tile.object color)
-           pos)))
+   (let [tile (and pos (self:get-tile pos))
+         object (and tile (. tile :object))]
+     (self:highlight-object object color)
+     pos))
 
 ;; highlight an object given its input data
 (fn LevelMap.highlight-object [self obj color]
-  (set self.highlight-map
-       (collect [i _ (pairs obj.tile-mask)] (values i color))))
+  (set self.highlight-map [])
+  (when obj
+    (set self.highlight-map
+         (collect [i _ (pairs obj.tile-mask)] (values i color)))))
 
 (fn LevelMap.delete-object-at [self pos]
   (when pos
