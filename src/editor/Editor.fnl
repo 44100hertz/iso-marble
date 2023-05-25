@@ -6,7 +6,7 @@
 (fn Editor.constructor [{: screen-size} levelname]
   (love.keyboard.setKeyRepeat true)
   {:level (LevelMap levelname)
-   :add-object {:type :cube :pos (Vec3 0 0 0) :size (Vec3 1 1 1) :color "green"}
+   :cursor-object {:type :cube :pos (Vec3 0 0 0) :size (Vec3 1 1 1) :color "green"}
    :layer-index 1
    :camera {:center (Vec2 100 0) :zoom 4} ;; boundaries of camera
    :scroll-rate 8
@@ -63,7 +63,20 @@
                    (case self.mode.type
                      :add 32
                      _ 0)))
-            :onclick #(self:toggle-mode :add)}]]]))
+            :onclick #(self:toggle-mode :add)}]
+          [:button
+           {:position (Vec2 168 0)
+            :size (Vec2 64 64)
+            :display [:image-quad "src/editor/eyedrop.png" 0 0 32 32]
+            :watch [self :mode]
+            :update
+            (fn [elem]
+            ;; increase the x of the image quad
+             (tset (. elem 2 :display) 3
+                   (case self.mode.type
+                     :pick 32
+                     _ 0)))
+            :onclick #(self:toggle-mode :pick)}]]]))
   (set self.event-handlers [self.UI self]))
 
 (fn Editor.update [self])
@@ -112,13 +125,22 @@
 
 ;; get a mode handler table, if mode is not provided use the current mode
 (fn Editor.get-mode-handler [self mode]
-  (let [mode (or mode self.mode.type)]
-    (. self.mode-handlers mode)))
+  (let [mode (or mode self.mode.type)
+        handler (. self.mode-handlers mode)]
+    (if handler handler
+        (error (.. "Unknown editor mode: " mode)))))
 
 (fn Editor.call-mode-handler-method [self method ...]
   (let [handler (self:get-mode-handler)]
     (when (. handler method)
       ((. handler method) self ...))))
+
+;; a simple on-off mode toggle function
+(macro default-toggle [mode]
+  `(fn [self#]
+     (case self#.mode
+       {:type ,mode} {:type :normal}
+       _# {:type ,mode})))
 
 (set Editor.mode-handlers {})
 (set Editor.mode-handlers.normal
@@ -132,29 +154,26 @@
 
 (set Editor.mode-handlers.add
      {:toggle
-      (fn [self]
-          (case self.mode
-             {:type :add} {:type :normal}
-             _ {:type :add}))
+      (default-toggle :add)
       :mousepressed
       (fn [self x y button]
-       (self.level:render-object (util.deep-copy self.add-object))
-       (if (?. _G.DEBUG :editor-add-object)
-           (_G.DEBUG.info "Added " self.add-object)))
+       (self.level:render-object (util.deep-copy self.cursor-object))
+       (if (?. _G.DEBUG :editor-cursor-object)
+           (_G.DEBUG.info "Added " self.cursor-object)))
       :mousemoved
       (fn [self x y]
         (let [ingame-pos (self:mouse-to-ingame-pos (Vec2 x y))
               layer-pos (ingame-pos:locate-mouse-with-y self.layer-index)
               tile-pos (layer-pos:map math.floor)]
          (when self.mode.object-added
-           (self.level:delete-object self.add-object))
-         (set self.add-object.pos tile-pos)
-         (self.level:render-object self.add-object)
+           (self.level:delete-object self.cursor-object))
+         (set self.cursor-object.pos tile-pos)
+         (self.level:render-object self.cursor-object)
          (set self.mode.object-added true)))
       :exit
       (fn [self]
        (if self.mode.object-added
-           (self.level:delete-object self.add-object)))})
+           (self.level:delete-object self.cursor-object)))})
 
 (set Editor.mode-handlers.delete
      {:toggle
@@ -173,6 +192,20 @@
         (self:highlight-object-xy x y [1 0 0]))
       :exit (fn [self] (self.level:highlight-object))})
 
+(set Editor.mode-handlers.pick
+     {:toggle
+      (default-toggle :pick)
+      :mousemoved
+      (fn [self x y]
+        (self:highlight-object-xy x y [0.5 0.75 0.75]))
+      :mousepressed
+      (fn [self x y]
+        (let [tile-pos (self:get-mouse-tile (Vec2 x y))
+              tile (self.level:get-tile tile-pos)]
+          (when tile.object
+            (set self.cursor-object (util.deep-copy tile.object))
+            (self:toggle-mode :add))))
+      :exit (fn [self] (self.level:highlight-object))})
 (fn Editor.get-transform [self]
   (util.transform-from-list
    [:translate (/ (util.screen-size) 2)]
@@ -220,6 +253,7 @@
      "-" #(Editor.adjust-zoom $1 -1)
      :a #(Editor.toggle-mode $1 :add)
      :x #(Editor.toggle-mode $1 :delete)
+     :i #(Editor.toggle-mode $1 :pick)
      :up (fn [self modifiers] (set-scroll self (Vec2 0 -1) modifiers.shift))
      :down (fn [self modifiers] (set-scroll self (Vec2 0 1) modifiers.shift))
      :left (fn [self modifiers] (set-scroll self (Vec2 -1 0) modifiers.shift))

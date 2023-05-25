@@ -22,8 +22,13 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 **** DONE clear highlight when switching to add mode
 **** DONE show grid for layers, instead of semitransparent fill
 *** DONE actually highlight the object most in front, given multiple
-*** TODO mouse move cube
+*** DONE press i to "eye-drop"
+*** TODO "move mode" to delete, pick, then add
 *** TODO resize cube
+** TODO advanced editing operations
+*** TODO mouse move multiple objects
+**** TODO shift-click in normal mode to select multiple objects
+**** TODO "move mode" multiple objects
 ** DONE change tile layout to be 1-dimensional
 ** TODO events system -- callbacks as events, tie in UI
 ** TODO actors system
@@ -51,3 +56,4 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 ** DONE improve point type by expanding single numbers to points
 ** TODO fix xpcall handling and the wrapper "safely" call
 ** TODO rewrite Vector operations as macros for speed
+** TODO file fennel bug report for match on variable
