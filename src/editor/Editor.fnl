@@ -135,18 +135,41 @@
      :left (fn [self modifiers] (set-scroll self (Vec2 -1 0) modifiers.shift))
      :right (fn [self modifiers] (set-scroll self (Vec2 1 0) modifiers.shift))}))
 
-(fn Editor.draw-map [self]
-  (for [i self.level.map.size.y 0 -1]
-    (when (and (= self.mode.type :add) (= i self.layer-index))
-      (util.with-color-rgba 0 0 1 0.2
-        (let [(x y) (love.window.getMode)]
-          #(love.graphics.rectangle :fill 0 0 x y))))
-    (self:with-camera #(self.level:draw-layer i))))
-
 (fn Editor.draw [self]
   ;; draw map
   (self:draw-map util.screen-size)
   (self.UI:draw))
+
+(fn Editor.draw-map [self]
+  (for [i self.level.map.size.y 0 -1]
+    (when (and (= self.mode.type :add) (= i self.layer-index))
+      (self:draw-grid i))
+    (self:with-camera #(self.level:draw-layer i))))
+
+(fn Editor.draw-grid [self layer]
+  (self:with-camera
+   #(util.with-color-rgba 1 1 1 0.1
+     #(do
+       (for [x 0 self.level.map.size.x]
+         (self:draw-grid-line layer x :x))
+       (for [z 0 self.level.map.size.z]
+         (self:draw-grid-line layer z :z)))))
+  (util.with-color-rgba 0 0 1 0.1
+    (let [(x y) (love.window.getMode)]
+      #(love.graphics.rectangle :fill 0 0 x y))))
+
+;; draw a single grid line (assumes that color and transform have been set
+;; already)
+(fn Editor.draw-grid-line [self layer i axis]
+  (let [opposite (if (= axis :x) :z :x)
+        mirror (if (= axis :z) (Vec2 -1 1) (Vec2 1 1))
+        start3 (Vec3 i layer 0)
+        end3 (Vec3 i layer (. self.level.map.size opposite))
+        start (* mirror (start3:project-to-screen))
+        end (* mirror (end3:project-to-screen))]
+     (love.graphics.setLineWidth (/ 1 self.camera.zoom))
+     (love.graphics.line start.x start.y end.x end.y)
+     (love.graphics.setLineWidth 1)))
 
 (fn Editor.update [self])
 

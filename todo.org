@@ -19,7 +19,8 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 *** TODO mouse add cube
 **** DONE actually select added objects
 **** DONE actually add object on click
-**** TODO show grid for layers, instead of semitransparent fill
+**** TODO clear highlight when switching to add mode
+**** DONE show grid for layers, instead of semitransparent fill
 *** DONE actually highlight the object most in front, given multiple
 *** TODO mouse move cube
 *** TODO resize cube
@@ -38,6 +39,9 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 ** TODO unify UI and scene model as game state tree
 ** TODO save/load maps
 * Backburner
+** TODO only draw visible
+*** TODO tiles
+*** TODO grid lines
 ** TODO make editor highlight a field rather than a separate table, and stack the color with the base color
 ** TODO give UI custom cursors
 ** TODO give UI ability to create sequential layout before it's too late
