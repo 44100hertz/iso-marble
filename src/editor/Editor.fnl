@@ -80,18 +80,7 @@
   (if
    (= button 3)
    (set self.panning {:last-pos (Vec2 x y)})
-
-   (= self.mode.type :delete)
-   (do
-     (self.level:delete-object-at (self:get-mouse-tile (Vec2 x y)))
-     (if (not self.mode.many)
-         (set self.mode {})))
-
-   (= self.mode.type :add)
-   (do
-     (self.level:render-object (util.deep-copy self.add-object))
-     (if (?. _G.DEBUG :editor-add-object)
-         (_G.DEBUG.info "Added " self.add-object)))))
+   (self:call-mode-handler-method :mousepressed x y button)))
 
 (fn Editor.mousereleased [self x y]
   (if self.panning (set self.panning false)))
@@ -104,39 +93,42 @@
                                  (- (Vec2 x y) self.panning.last-pos)
                                  self.camera.zoom)))
       (set self.panning.last-pos (Vec2 x y)))
-    (case self.mode.type
-      :normal
-      (self:highlight-object-xy x y [0 1 1])
-      :delete
-      (self:highlight-object-xy x y [1 0 0])
-      :add
-      (let [ingame-pos (self:mouse-to-ingame-pos (Vec2 x y))
-            layer-pos (ingame-pos:locate-mouse-with-y self.layer-index)
-            tile-pos (layer-pos:map math.floor)]
-       (when self.mode.object-added
-         (self.level:delete-object self.add-object))
-       (set self.add-object.pos tile-pos)
-       (self.level:render-object self.add-object)
-       (set self.mode.object-added true)))))
+    (self:call-mode-handler-method :mousemoved x y)))
 
 (fn Editor.wheelmoved [self x y]
   (let [mousepos (Vec2 (love.mouse.getPosition))]
     (self:adjust-zoom y (self:mouse-to-ingame-pos mousepos))))
 
 (fn Editor.toggle-mode [self mode]
-  (let [{: toggle} (. self.mode-handlers mode)
-        prev-mode self.mode
-        prev-mode-handler (. self.mode-handlers prev-mode.type)
-        {: exit} prev-mode-handler
+  (let [{: toggle} (self:get-mode-handler mode)
+        prev-handler (self:get-mode-handler)
+        {: exit} prev-handler
         next-mode (toggle self)]
-    (when (and exit (not= prev-mode.type next-mode.type))
+    (if (not next-mode.type)
+        (error (.. "Expected a new mode, got none. Fix the toggle handler.")))
+    (when (and exit (not= self.mode.type next-mode.type))
       (exit self))
     (set self.mode next-mode)))
 
+;; get a mode handler table, if mode is not provided use the current mode
+(fn Editor.get-mode-handler [self mode]
+  (let [mode (or mode self.mode.type)]
+    (. self.mode-handlers mode)))
+
+(fn Editor.call-mode-handler-method [self method ...]
+  (let [handler (self:get-mode-handler)]
+    (when (. handler method)
+      ((. handler method) self ...))))
+
 (set Editor.mode-handlers {})
 (set Editor.mode-handlers.normal
-     {:toggle (fn [self] {:type :normal})
-      :exit (fn [self] (self.level:highlight-object))})
+     {:toggle
+      (fn [self] {:type :normal})
+      :mousemoved
+      (fn [self x y]
+        (self:highlight-object-xy x y [0 1 1]))
+      :exit
+      (fn [self] (self.level:highlight-object))})
 
 (set Editor.mode-handlers.add
      {:toggle
@@ -144,6 +136,21 @@
           (case self.mode
              {:type :add} {:type :normal}
              _ {:type :add}))
+      :mousepressed
+      (fn [self x y button]
+       (self.level:render-object (util.deep-copy self.add-object))
+       (if (?. _G.DEBUG :editor-add-object)
+           (_G.DEBUG.info "Added " self.add-object)))
+      :mousemoved
+      (fn [self x y]
+        (let [ingame-pos (self:mouse-to-ingame-pos (Vec2 x y))
+              layer-pos (ingame-pos:locate-mouse-with-y self.layer-index)
+              tile-pos (layer-pos:map math.floor)]
+         (when self.mode.object-added
+           (self.level:delete-object self.add-object))
+         (set self.add-object.pos tile-pos)
+         (self.level:render-object self.add-object)
+         (set self.mode.object-added true)))
       :exit
       (fn [self]
        (if self.mode.object-added
@@ -156,6 +163,14 @@
             {:type :delete :many false} {:type :delete :many true}
             {:type :delete :many true} {:type :normal}
             _ {:type :delete :many false}))
+      :mousepressed
+      (fn [self x y button]
+        (self.level:delete-object-at (self:get-mouse-tile (Vec2 x y)))
+        (if (not self.mode.many)
+            (self:toggle-mode :normal)))
+      :mousemoved
+      (fn [self x y]
+        (self:highlight-object-xy x y [1 0 0]))
       :exit (fn [self] (self.level:highlight-object))})
 
 (fn Editor.get-transform [self]

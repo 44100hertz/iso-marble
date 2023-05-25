@@ -16,15 +16,16 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 **** DONE add visible delete element
 **** DONE make x key do delete
 **** DONE set up editor delete mode
-*** TODO mouse add cube
+*** DONE mouse add cube
 **** DONE actually select added objects
 **** DONE actually add object on click
-**** TODO clear highlight when switching to add mode
+**** DONE clear highlight when switching to add mode
 **** DONE show grid for layers, instead of semitransparent fill
 *** DONE actually highlight the object most in front, given multiple
 *** TODO mouse move cube
 *** TODO resize cube
 ** DONE change tile layout to be 1-dimensional
+** TODO events system -- callbacks as events, tie in UI
 ** TODO actors system
 *** TODO actors rendering
 *** TODO mouse select actors
