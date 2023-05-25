@@ -7,7 +7,6 @@
   (love.keyboard.setKeyRepeat true)
   {:level (LevelMap levelname)
    :cursor-object {:type :cube :pos (Vec3 0 0 0) :size (Vec3 1 1 1) :color "green"}
-   :layer-index 1
    :camera {:center (Vec2 100 0) :zoom 4} ;; boundaries of camera
    :scroll-rate 8
    :panning false
@@ -102,6 +101,27 @@
 (fn Editor.keypressed [self scancode modifiers]
   (when (. self.key-binds scancode) ((. self.key-binds scancode) self modifiers)))
 
+(set Editor.key-binds
+  (let [set-scroll
+        (fn [self offset is-shifted]
+          (set self.camera.center
+               (+ self.camera.center
+                  (* offset
+                     self.scroll-rate
+                     (if is-shifted 8 1)))))]
+    {:w (fn [self] (self:set-layer-relative -1))
+     :s (fn [self] (self:set-layer-relative 1))
+     "=" #(Editor.adjust-zoom $1 1)
+     "-" #(Editor.adjust-zoom $1 -1)
+     :a #(Editor.toggle-mode $1 :add)
+     :x #(Editor.toggle-mode $1 :delete)
+     :i #(Editor.toggle-mode $1 :pick)
+     :m #(Editor.toggle-mode $1 :move)
+     :up (fn [self modifiers] (set-scroll self (Vec2 0 -1) modifiers.shift))
+     :down (fn [self modifiers] (set-scroll self (Vec2 0 1) modifiers.shift))
+     :left (fn [self modifiers] (set-scroll self (Vec2 -1 0) modifiers.shift))
+     :right (fn [self modifiers] (set-scroll self (Vec2 1 0) modifiers.shift))}))
+
 (fn Editor.mousepressed [self x y button]
   (if
    (= button 3)
@@ -139,8 +159,8 @@
     (when mode-changed?
       (self:call-mode-handler-method :enter))))
 
-;; get a mode handler table, if mode is not provided use the current mode
 (fn Editor.get-mode-handler [self mode]
+  ;; get a mode handler table, if mode is not provided use the current mode
   (let [mode (or mode self.mode.type)
         handler (. self.mode-handlers mode)]
     (if handler handler
@@ -151,14 +171,15 @@
     (when (. handler method)
       ((. handler method) self ...))))
 
-;; a simple on-off mode toggle function
 (macro default-toggle [mode]
+  ;; a simple on-off mode toggle function
   `(fn [self#]
      (case self#.mode
        {:type ,mode} {:type :normal}
        _# {:type ,mode})))
 
 (set Editor.mode-handlers {})
+
 (set Editor.mode-handlers.normal
      {:toggle
       (fn [self] {:type :normal})
@@ -182,9 +203,8 @@
       :mousemoved
       (fn [self x y]
         (let [ingame-pos (self:mouse-to-ingame-pos (Vec2 x y))
-              layer-pos (ingame-pos:locate-mouse-with-y self.layer-index)
+              layer-pos (ingame-pos:locate-mouse-with-y self.cursor-object.pos.y)
               tile-pos (layer-pos:map math.floor)]
-         (self.level:delete-object self.cursor-object)
          (set self.cursor-object.pos tile-pos)
          (self.level:render-object self.cursor-object)))
       :exit
@@ -235,7 +255,7 @@
               tile (self.level:get-tile tile-pos)
               object tile.object]
           (when object
-            (set self.layer-index object.pos.y)
+            (set self.cursor-object.pos.y object.pos.y)
             (self.level:delete-object tile.object)
             (set self.cursor-object (util.deep-copy tile.object))
             (self:toggle-mode :add))))
@@ -247,12 +267,12 @@
    [:scale self.camera.zoom]
    [:translate (- self.camera.center)]))
 
-;; Perform function f with the boundaries of the current camera
 (fn Editor.with-camera [self f]
+  ;; Perform function f with the boundaries of the current camera
   (util.with-transform (self:get-transform) f))
 
-;; Scales the mouse position in accordance with zoom/scroll
 (fn Editor.mouse-to-ingame-pos [self point]
+  ;; Scales the mouse position in accordance with zoom/scroll
   (let [tform (self:get-transform)]
     (Vec2 (tform:inverseTransformPoint point.x point.y))))
 
@@ -269,35 +289,15 @@
            (util.lume.lerp self.camera.center center-point 0.5)))))))
 
 (fn Editor.set-layer [self layer]
-  (set self.layer-index (util.clamp layer 0 self.level.map.size.y)))
+  (set self.cursor-object.pos.y (util.clamp layer 0 self.level.map.size.y))
+  (self.level:render-object self.cursor-object))
 
 (fn Editor.set-layer-relative [self amount]
-  (self:set-layer (+ self.layer-index amount)))
-
-(set Editor.key-binds
-  (let [set-scroll
-        (fn [self offset is-shifted]
-          (set self.camera.center
-               (+ self.camera.center
-                  (* offset
-                     self.scroll-rate
-                     (if is-shifted 8 1)))))]
-    {:w (fn [self] (self:set-layer-relative -1))
-     :s (fn [self] (self:set-layer-relative 1))
-     "=" #(Editor.adjust-zoom $1 1)
-     "-" #(Editor.adjust-zoom $1 -1)
-     :a #(Editor.toggle-mode $1 :add)
-     :x #(Editor.toggle-mode $1 :delete)
-     :i #(Editor.toggle-mode $1 :pick)
-     :m #(Editor.toggle-mode $1 :move)
-     :up (fn [self modifiers] (set-scroll self (Vec2 0 -1) modifiers.shift))
-     :down (fn [self modifiers] (set-scroll self (Vec2 0 1) modifiers.shift))
-     :left (fn [self modifiers] (set-scroll self (Vec2 -1 0) modifiers.shift))
-     :right (fn [self modifiers] (set-scroll self (Vec2 1 0) modifiers.shift))}))
+  (self:set-layer (+ self.cursor-object.pos.y amount)))
 
 (fn Editor.draw-map [self]
   (for [i self.level.map.size.y 0 -1]
-    (when (and (= self.mode.type :add) (= i self.layer-index))
+    (when (and (= self.mode.type :add) (= i self.cursor-object.pos.y))
       (self:draw-grid i))
     (self:with-camera #(self.level:draw-layer i))))
 
@@ -313,9 +313,9 @@
     (let [(x y) (love.window.getMode)]
       #(love.graphics.rectangle :fill 0 0 x y))))
 
-;; draw a single grid line (assumes that color and transform have been set
-;; already)
 (fn Editor.draw-grid-line [self layer i axis]
+  ;; draw a single grid line (assumes that color and transform have been set
+  ;; already)
   (let [opposite (if (= axis :x) :z :x)
         mirror (if (= axis :z) (Vec2 -1 1) (Vec2 1 1))
         start3 (Vec3 i layer 0)
@@ -331,6 +331,5 @@
          (self.level:highlight-object-at (self:get-mouse-tile (Vec2 x y)) color))
   (if (and found-object-pos (?. _G.DEBUG :editor-mouse-select))
       (_G.DEBUG.info "Highlight Tile: " (self.level:get-tile found-object-pos))))
-
 
 Editor

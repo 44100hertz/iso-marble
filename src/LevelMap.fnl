@@ -40,29 +40,32 @@
 (fn LevelMap.within-map-bounds? [self point]
   (point:within (Vec3 0 0 0) self.map.size))
 
-;; given an integer tile position point, give the index into self.tile-map
 (fn LevelMap.tile-index [self {: x : y : z}]
+  ;; given an integer tile position point, give the index into self.tile-map
   (+
    x
    (* self.map.size.x z)
    (* self.map.size.x self.map.size.z y)))
 
-;; turn an object into tiles
 (fn LevelMap.render-object [self obj]
+  ;; turn an object into tiles
+  ;; delete pre-existing object
+  (if obj.tile-mask (self:delete-object obj))
+  ;; render object
   (let [renderer (require (.. "objects/" obj.type))]
-    (set obj.tile-mask [])
-    (renderer.render {:set-tile
-                      (fn [pos ...]
-                        (when (self:within-map-bounds? pos)
-                          (tset obj.tile-mask (self:tile-index pos) true)
-                          (self:set-tile obj pos ...)))}
-                obj)
-    (if (?. _G.DEBUG :render-object)
-        (_G.DEBUG.info "Rendered " obj))))
+      (set obj.tile-mask [])
+      (renderer.render {:set-tile
+                        (fn [pos ...]
+                          (when (self:within-map-bounds? pos)
+                            (tset obj.tile-mask (self:tile-index pos) true)
+                            (self:set-tile obj pos ...)))}
+                  obj)
+      (if (?. _G.DEBUG :render-object)
+          (_G.DEBUG.info "Rendered " obj))))
 
-;; @obj: the source data table for the object which is setting the tile.
-;; @value: which tile to set.
 (fn LevelMap.set-tile [self obj pos value props]
+  ;; @obj: the source data table for the object which is setting the tile.
+  ;; @value: which tile to set.
   (if (self:within-map-bounds? pos)
       (do
         (let [tile-index (self:tile-index pos)
@@ -75,22 +78,22 @@
       (when (?. DEBUG :tiles)
         (DEBUG.warn-with-traceback "Attempt to set out of bounds tile" pos value))))
 
-;; get a tile at pos
 (fn LevelMap.get-tile [self pos]
+  ;; get a tile at pos
   (and (self:within-map-bounds? pos)
     (let [index (self:tile-index pos)]
       (. self.tile-map index))))
 
-;; highlight the object which contains a tile at pos
-;; call with nothing to highlight nothing
 (fn LevelMap.highlight-object-at [self pos color]
+  ;; highlight the object which contains a tile at pos
+  ;; call with nothing to highlight nothing
    (let [tile (and pos (self:get-tile pos))
          object (and tile (. tile :object))]
      (self:highlight-object object color)
      pos))
 
-;; highlight an object given its input data
 (fn LevelMap.highlight-object [self obj color]
+  ;; highlight an object given its input data
   (set self.highlight-map [])
   (when obj
     (set self.highlight-map
@@ -107,33 +110,34 @@
 (fn LevelMap.delete-object [self obj]
   (each [index _ (pairs obj.tile-mask)]
     (let [tile (. self.tile-map index)]
-      (tset self.tile-map index (self:tile-without-obj tile obj)))))
+      (tset self.tile-map index (self:tile-without-object tile obj))))
+  (set obj.tile-mask nil))
 
-;; Remove all references to a given object from a tile, and return the modified
-;; tile.
-(fn LevelMap.tile-without-obj [self tile obj]
+(fn LevelMap.tile-without-object [self tile obj]
+  ;; Remove all references to a given object from a tile, and return the
+  ;; modified tile.
   (if (= tile.object obj)
       tile.prev-tile
       (do
-        (set tile.prev-tile (self:tile-without-obj tile.prev-tile obj))
+        (set tile.prev-tile (self:tile-without-object tile.prev-tile obj))
         tile)))
 
-;; check an entire cube-shaped region based on a mouse position
 (fn LevelMap.get-tile-position-at [self point]
-    (var found-tile-pos false)
-    (for [layer 0 self.map.size.y 1 &until found-tile-pos]
-      (let [tile-at-plane-intersection
-            (fn [intersect-fn invert offset]
-              (let [layer (if invert (- self.map.size.y layer) layer)
-                    layer (+ offset layer)
-                    intersect ((. point (.. "locate-mouse-with-" intersect-fn)) point layer)
-                    tile-pos (+ (intersect:map math.floor))]
-                (and (self:get-tile tile-pos) tile-pos)))]
-        (set found-tile-pos
-             (or
-              (tile-at-plane-intersection :x true -1)
-              (tile-at-plane-intersection :y false 0)
-              (tile-at-plane-intersection :z true -1)))))
-    found-tile-pos)
+  ;; check an entire cube-shaped region based on a mouse position
+  (var found-tile-pos false)
+  (for [layer 0 self.map.size.y 1 &until found-tile-pos]
+    (let [tile-at-plane-intersection
+          (fn [intersect-fn invert offset]
+            (let [layer (if invert (- self.map.size.y layer) layer)
+                  layer (+ offset layer)
+                  intersect ((. point (.. "locate-mouse-with-" intersect-fn)) point layer)
+                  tile-pos (+ (intersect:map math.floor))]
+              (and (self:get-tile tile-pos) tile-pos)))]
+      (set found-tile-pos
+           (or
+            (tile-at-plane-intersection :x true -1)
+            (tile-at-plane-intersection :y false 0)
+            (tile-at-plane-intersection :z true -1)))))
+  found-tile-pos)
 
 LevelMap
