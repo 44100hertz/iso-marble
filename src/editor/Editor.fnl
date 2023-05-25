@@ -135,7 +135,8 @@
 
 (set Editor.mode-handlers {})
 (set Editor.mode-handlers.normal
-     {:toggle (fn [self] {:type :normal})})
+     {:toggle (fn [self] {:type :normal})
+      :exit (fn [self] (self.level:highlight-object))})
 
 (set Editor.mode-handlers.add
      {:toggle
@@ -154,7 +155,8 @@
           (case self.mode
             {:type :delete :many false} {:type :delete :many true}
             {:type :delete :many true} {:type :normal}
-            _ {:type :delete :many false}))})
+            _ {:type :delete :many false}))
+      :exit (fn [self] (self.level:highlight-object))})
 
 (fn Editor.get-transform [self]
   (util.transform-from-list
