@@ -11,9 +11,13 @@
    :camera {:center (Vec2 100 0) :zoom 4} ;; boundaries of camera
    :scroll-rate 8
    :panning false
-   :mode {}})
+   :mode {:type :normal}})
+
+(fn Editor.destructor []
+  (love.keyboard.setKeyRepeat false))
 
 (fn Editor.instantiate [self]
+  (self:toggle-mode :normal)
   (set self.UI
        (UI
         [:node
@@ -46,7 +50,7 @@
                      {:type :delete :many false} 32
                      {:type :delete :many true} 64
                      _ 0)))
-            :onclick #(self:next-delete-mode)}]
+            :onclick #(self:toggle-mode :delete)}]
           [:button
            {:position (Vec2 104 0)
             :size (Vec2 64 64)
@@ -56,32 +60,101 @@
             (fn [elem]
             ;; increase the x of the image quad
              (tset (. elem 2 :display) 3
-                   (case self.mode
-                     {:type :add} 32
+                   (case self.mode.type
+                     :add 32
                      _ 0)))
-            :onclick #(self:toggle-add-mode)}]]]))
+            :onclick #(self:toggle-mode :add)}]]]))
   (set self.event-handlers [self.UI self]))
 
-(fn Editor.destructor []
-  (love.keyboard.setKeyRepeat false))
+(fn Editor.update [self])
 
-;; cycle thru delete modes
-(fn Editor.next-delete-mode [self]
-  (set self.mode
-       (case self.mode
-         {:type :delete :many false} {:type :delete :many true}
-         {:type :delete :many true} {}
-         _ {:type :delete :many false})))
+(fn Editor.draw [self]
+  ;; draw map
+  (self:draw-map util.screen-size)
+  (self.UI:draw))
 
-(fn Editor.toggle-add-mode [self]
-  (set self.mode
-       (case self.mode
-         {:type :add}
-         (do
-           (if self.mode.object-added
-               (self.level:delete-object self.add-object))
-           {})
-         _ {:type :add})))
+(fn Editor.keypressed [self scancode modifiers]
+  (when (. self.key-binds scancode) ((. self.key-binds scancode) self modifiers)))
+
+(fn Editor.mousepressed [self x y button]
+  (if
+   (= button 3)
+   (set self.panning {:last-pos (Vec2 x y)})
+
+   (= self.mode.type :delete)
+   (do
+     (self.level:delete-object-at (self:get-mouse-tile (Vec2 x y)))
+     (if (not self.mode.many)
+         (set self.mode {})))
+
+   (= self.mode.type :add)
+   (do
+     (self.level:render-object (util.deep-copy self.add-object))
+     (if (?. _G.DEBUG :editor-add-object)
+         (_G.DEBUG.info "Added " self.add-object)))))
+
+(fn Editor.mousereleased [self x y]
+  (if self.panning (set self.panning false)))
+
+(fn Editor.mousemoved [self x y]
+  (if self.panning
+    (do
+      (set self.camera.center (- self.camera.center
+                                (/
+                                 (- (Vec2 x y) self.panning.last-pos)
+                                 self.camera.zoom)))
+      (set self.panning.last-pos (Vec2 x y)))
+    (case self.mode.type
+      :normal
+      (self:highlight-object-xy x y [0 1 1])
+      :delete
+      (self:highlight-object-xy x y [1 0 0])
+      :add
+      (let [ingame-pos (self:mouse-to-ingame-pos (Vec2 x y))
+            layer-pos (ingame-pos:locate-mouse-with-y self.layer-index)
+            tile-pos (layer-pos:map math.floor)]
+       (when self.mode.object-added
+         (self.level:delete-object self.add-object))
+       (set self.add-object.pos tile-pos)
+       (self.level:render-object self.add-object)
+       (set self.mode.object-added true)))))
+
+(fn Editor.wheelmoved [self x y]
+  (let [mousepos (Vec2 (love.mouse.getPosition))]
+    (self:adjust-zoom y (self:mouse-to-ingame-pos mousepos))))
+
+(fn Editor.toggle-mode [self mode]
+  (let [{: toggle} (. self.mode-handlers mode)
+        prev-mode self.mode
+        prev-mode-handler (. self.mode-handlers prev-mode.type)
+        {: exit} prev-mode-handler
+        next-mode (toggle self)]
+    (when (and exit (not= prev-mode.type next-mode.type))
+      (exit self))
+    (set self.mode next-mode)))
+
+(set Editor.mode-handlers {})
+(set Editor.mode-handlers.normal
+     {:toggle (fn [self] {:type :normal})})
+
+(set Editor.mode-handlers.add
+     {:toggle
+      (fn [self]
+          (case self.mode
+             {:type :add} {:type :normal}
+             _ {:type :add}))
+      :exit
+      (fn [self]
+       (if self.mode.object-added
+           (self.level:delete-object self.add-object)))})
+
+(set Editor.mode-handlers.delete
+     {:toggle
+      (fn [self]
+          (case self.mode
+            {:type :delete :many false} {:type :delete :many true}
+            {:type :delete :many true} {:type :normal}
+            _ {:type :delete :many false}))})
 
 (fn Editor.get-transform [self]
   (util.transform-from-list
@@ -128,17 +201,12 @@
      :s (fn [self] (self:set-layer-relative 1))
      "=" #(Editor.adjust-zoom $1 1)
      "-" #(Editor.adjust-zoom $1 -1)
-     :a #(Editor.toggle-add-mode $1)
-     :x #(Editor.next-delete-mode $1)
+     :a #(Editor.toggle-mode $1 :add)
+     :x #(Editor.toggle-mode $1 :delete)
      :up (fn [self modifiers] (set-scroll self (Vec2 0 -1) modifiers.shift))
      :down (fn [self modifiers] (set-scroll self (Vec2 0 1) modifiers.shift))
      :left (fn [self modifiers] (set-scroll self (Vec2 -1 0) modifiers.shift))
      :right (fn [self modifiers] (set-scroll self (Vec2 1 0) modifiers.shift))}))
-
-(fn Editor.draw [self]
-  ;; draw map
-  (self:draw-map util.screen-size)
-  (self.UI:draw))
 
 (fn Editor.draw-map [self]
   (for [i self.level.map.size.y 0 -1]
@@ -171,62 +239,11 @@
      (love.graphics.line start.x start.y end.x end.y)
      (love.graphics.setLineWidth 1)))
 
-(fn Editor.update [self])
-
-(fn Editor.keypressed [self scancode modifiers]
-  (when (. self.key-binds scancode) ((. self.key-binds scancode) self modifiers)))
-
-(fn Editor.mousepressed [self x y button]
-  (if
-   (= button 3)
-   (set self.panning {:last-pos (Vec2 x y)})
-
-   (= self.mode.type :delete)
-   (do
-     (self.level:delete-object-at (self:get-mouse-tile (Vec2 x y)))
-     (if (not self.mode.many)
-         (set self.mode {})))
-
-   (= self.mode.type :add)
-   (do
-     (self.level:render-object (util.deep-copy self.add-object))
-     (if (?. _G.DEBUG :editor-add-object)
-         (_G.DEBUG.info "Added " self.add-object)))))
-
-(fn Editor.mousereleased [self x y]
-  (if self.panning (set self.panning false)))
-
 (fn Editor.highlight-object-xy [self x y color]
   (local found-object-pos
          (self.level:highlight-object-at (self:get-mouse-tile (Vec2 x y)) color))
   (if (and found-object-pos (?. _G.DEBUG :editor-mouse-select))
       (_G.DEBUG.info "Highlight Tile: " (self.level:get-tile found-object-pos))))
 
-(fn Editor.mousemoved [self x y]
-  (if self.panning
-    (do
-      (set self.camera.center (- self.camera.center
-                                (/
-                                 (- (Vec2 x y) self.panning.last-pos)
-                                 self.camera.zoom)))
-      (set self.panning.last-pos (Vec2 x y)))
-    (case self.mode.type
-      nil
-      (self:highlight-object-xy x y [0 1 1])
-      :delete
-      (self:highlight-object-xy x y [1 0 0])
-      :add
-      (let [ingame-pos (self:mouse-to-ingame-pos (Vec2 x y))
-            layer-pos (ingame-pos:locate-mouse-with-y self.layer-index)
-            tile-pos (layer-pos:map math.floor)]
-       (when self.mode.object-added
-         (self.level:delete-object self.add-object))
-       (set self.add-object.pos tile-pos)
-       (self.level:render-object self.add-object)
-       (set self.mode.object-added true)))))
-
-(fn Editor.wheelmoved [self x y]
-  (let [mousepos (Vec2 (love.mouse.getPosition))]
-    (self:adjust-zoom y (self:mouse-to-ingame-pos mousepos))))
 
 Editor
