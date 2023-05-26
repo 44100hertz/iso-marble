@@ -25,7 +25,8 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 *** DONE press i to "eye-drop"
 *** DONE "move mode" to delete, pick, then add
 *** DONE resize cube
-** TODO refactor editor keybinds
+** DONE refactor editor keybinds
+** TODO save/load maps
 ** TODO layout engine for UI
 ** TODO optimize drawing large maps
 ** TODO advanced editing operations
@@ -47,7 +48,9 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 *** TODO loops??
 ** TODO add right click menu
 ** TODO unify UI and scene model as game state tree
-** TODO save/load maps
+* BUGS/TESTING
+** TODO make the grid shown in editor accurately reflect the possible map size
+** TODO test mouse raycast for boundaries of level
 * Backburner
 ** TODO editor remap keybinds
 *** TODO UI text in layout

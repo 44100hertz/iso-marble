@@ -84,7 +84,7 @@
 
 ;; Special event for keypressed -- collects modifier state and checks for ctrl+q
 ;; to quit
-(fn love.keypressed [_k scancode]
+(fn love.keypressed [_k scancode is-repeat?]
  (let [modifier-list {:ctrl ["lctrl" "rctrl" "capslock"]
                       :shift ["lshift" "rshift"]
                       :alt ["lalt" "ralt"]}
@@ -92,4 +92,4 @@
                        (values modifier (love.keyboard.isDown (unpack keys))))]
    (if (and modifiers.ctrl (= scancode "q"))
       (love.event.quit)
-      (handle-event :keypressed scancode modifiers))))
+      (handle-event :keypressed scancode modifiers is-repeat?))))

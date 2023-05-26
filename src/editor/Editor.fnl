@@ -128,35 +128,42 @@
   (self:draw-map util.screen-size)
   (self.UI:draw))
 
-(fn Editor.keypressed [self scancode modifiers]
-  (when (. self.key-binds scancode) ((. self.key-binds scancode) self modifiers)))
-
-(set Editor.key-binds
-  (let [set-scroll
-        (fn [self offset is-shifted]
-          (set self.camera.center
-               (+ self.camera.center
-                  (* offset
-                     self.scroll-rate
-                     (if is-shifted 8 1)))))]
-    {:w (fn [self] (self:set-layer-relative -1))
-     :s (fn [self] (self:set-layer-relative 1))
-     "=" #(Editor.adjust-zoom $1 1)
-     "-" #(Editor.adjust-zoom $1 -1)
-     :a #(Editor.toggle-mode $1 :add)
-     :x #(Editor.toggle-mode $1 :delete)
-     :i #(Editor.toggle-mode $1 :pick)
-     :m #(Editor.toggle-mode $1 :move)
-     :r #(Editor.set-cursor-object-size-relative $1 :y 1)
-     :t #(Editor.set-cursor-object-size-relative $1 :z 1)
-     :y #(Editor.set-cursor-object-size-relative $1 :x 1)
-     :f #(Editor.set-cursor-object-size-relative $1 :y -1)
-     :g #(Editor.set-cursor-object-size-relative $1 :x -1)
-     :h #(Editor.set-cursor-object-size-relative $1 :z -1)
-     :up (fn [self modifiers] (set-scroll self (Vec2 0 -1) modifiers.shift))
-     :down (fn [self modifiers] (set-scroll self (Vec2 0 1) modifiers.shift))
-     :left (fn [self modifiers] (set-scroll self (Vec2 -1 0) modifiers.shift))
-     :right (fn [self modifiers] (set-scroll self (Vec2 1 0) modifiers.shift))}))
+(fn Editor.keypressed [self scancode modifiers is-repeat?]
+  (let [key-binds
+        {:w #(self:set-layer-relative -1)
+         :s #(self:set-layer-relative 1)
+         "=" #(self:adjust-zoom 1)
+         "-" #(self:adjust-zoom -1)
+         :a #(self:toggle-mode :add)
+         :x #(self:toggle-mode :delete)
+         :i #(self:toggle-mode :pick)
+         :m #(self:toggle-mode :move)
+         :r #(self:set-cursor-object-size-relative :y 1)
+         :t #(self:set-cursor-object-size-relative :z 1)
+         :y #(self:set-cursor-object-size-relative :x 1)
+         :f #(self:set-cursor-object-size-relative :y -1)
+         :g #(self:set-cursor-object-size-relative :x -1)
+         :h #(self:set-cursor-object-size-relative :z -1)
+         :up #(self:adjust-scroll (Vec2 0 -1) (. $1 :shift))
+         :down #(self:adjust-scroll (Vec2 0 1) (. $1 :shift))
+         :left #(self:adjust-scroll (Vec2 -1 0) (. $1 :shift))
+         :right #(self:adjust-scroll (Vec2 1 0) (. $1 :shift))}
+        handler (. key-binds scancode)
+        enable-repeat
+        (. {:w true
+            :s true
+            :up true
+            :r true
+            :t true
+            :y true
+            :f true
+            :g true
+            :h true
+            :down true
+            :left true
+            :right true} scancode)]
+    (when (and handler (or (not is-repeat?) enable-repeat))
+      (handler modifiers is-repeat?))))
 
 (fn Editor.mousepressed [self x y button]
   (if
@@ -324,6 +331,13 @@
         (set self.camera.center
            (util.lume.lerp self.camera.center center-point 0.5)))))))
 
+(fn Editor.adjust-scroll [self offset big-adjust]
+  (set self.camera.center
+       (+ self.camera.center
+          (* offset
+             self.scroll-rate
+             (if big-adjust 8 1)))))
+
 (fn Editor.set-cursor-object-size [self size]
   (when (= self.mode.type :add)
     (set self.cursor-object.size size)
@@ -332,7 +346,8 @@
 (fn Editor.set-cursor-object-size-relative [self axis offset]
   (let [size self.cursor-object.size
         dim (. size axis)
-        new-dim (math.max (+ dim offset) 1)]
+        level-size (. self.level.map.size axis)
+        new-dim (util.clamp (+ dim offset) 1 level-size)]
     (tset size axis new-dim)
     (self:set-cursor-object-size size)))
 
