@@ -107,6 +107,13 @@
    (>= self.y pos.y) (< self.y (+ pos.y size.y))
    (>= self.z pos.z) (< self.z (+ pos.z size.z))))
 
+(fn Vec3.is-closer-to-mouse [self other]
+  ;; used to determine the draw order of two different positions, as well as
+  ;; what to prioritize when selecting with mouse.
+  (if (> self.y other.y) true
+      (< self.y other.y) false
+      (> (+ self.x self.z) (+ other.x other.z))))
+
 (set _G.Vec2 Vec2)
 (set _G.Vec3 Vec3)
 

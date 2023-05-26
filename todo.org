@@ -30,6 +30,7 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 **** TODO shift-click in normal mode to select multiple objects
 **** TODO "move mode" multiple objects
 ** DONE change tile layout to be 1-dimensional
+** DONE fix bug where z or x axis takes priority when trying to pick objects with mouse
 ** TODO events system -- callbacks as events, tie in UI
 ** TODO actors system
 *** TODO actors rendering

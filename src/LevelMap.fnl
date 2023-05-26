@@ -125,22 +125,21 @@
         tile)))
 
 (fn LevelMap.get-tile-position-at [self point]
-  ;; check an entire cube-shaped region based on a mouse position
-  (var found-tile-pos false)
-  (for [layer self.map.size.y 0 -1 &until found-tile-pos]
-    (let [tile-at-plane-intersection
-          (fn [intersect-fn offset]
-            (let [intersect ((. point (.. "locate-mouse-with-" intersect-fn)) point layer)
-                  tile-pos (+ offset (intersect:map math.floor))
-                  got-tile (and (self:get-tile tile-pos) tile-pos)]
-              (when got-tile
-                (pp [layer intersect-fn tile-pos])
-                got-tile)))]
-      (set found-tile-pos
-           (or
-            (tile-at-plane-intersection :x (Vec3 -1 0 0))
-            (tile-at-plane-intersection :y 0)
-            (tile-at-plane-intersection :z (Vec3 0 0 -1))))))
-  found-tile-pos)
+  (local dummy-pos (Vec3 -1 -1 -1))
+  (var closest-tile-pos dummy-pos)
+  (fn closest-tile-in-axis [axis offset]
+    (for [i 0 (. self.map.size axis)]
+      (let [intersect-fn (. point (.. "locate-mouse-with-" axis))
+            tile-pos-frac (intersect-fn point i)
+            tile-pos (+ offset (tile-pos-frac:map math.floor))
+            tile (self:get-tile tile-pos)]
+        (if (and tile (tile-pos:is-closer-to-mouse closest-tile-pos))
+            (set closest-tile-pos tile-pos)))))
+  (closest-tile-in-axis :x (Vec3 -1 0 0))
+  (closest-tile-in-axis :y 0)
+  (closest-tile-in-axis :z (Vec3 0 0 -1))
+  (if (= closest-tile-pos dummy-pos)
+      false
+      closest-tile-pos))
 
 LevelMap
