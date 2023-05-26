@@ -77,5 +77,8 @@
       _ (error (.. "Unknown display-type on " type ": " display-type)))
     (when children (each [_i child (ipairs children)]
                      (self:draw-element child pos)))))
+      (if (?. _G.DEBUG :ui-position)
+          (util.with-color-rgba 1 0 0 1
+            #(love.graphics.rectangle :line pos.x pos.y size.x size.y)))
 
 UI

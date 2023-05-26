@@ -10,9 +10,10 @@
 
 (set _G.DEBUG {
                :tiles true
-               :editor-add-object true
+               :editor-add-object false
                :editor-mouse-select false
-               :render-object false})
+               :render-object false
+               :ui-position true})
 
 (fn _G.DEBUG.info [...]
   (each [_ msg (ipairs [...])]
