@@ -17,82 +17,109 @@
 
 (fn Editor.instantiate [self]
   (self:toggle-mode :normal)
-  (set self.UI
-       (UI
-        [:node
-         {:position (Vec2 0 0)
-          :size (Vec2 0 0)}
-         [
-          [:node
-           {:position (Vec2 40 64)
-            :size (Vec2 40 80)
-            :display [:image "src/editor/layerselect.png"]
-            :watch [self :mode]
-            :update (fn [elem]
-                      (tset (. elem 2) :disabled (not= self.mode.type :add)))}
-           [
-            [:button
-             {:position (Vec2 0 16)
-              :size (Vec2 40 32)
-              :onclick #(self:set-layer-relative -1)}]
-            [:button
-             {:position (Vec2 0 48)
-              :size (Vec2 40 32)
-              :onclick #(self:set-layer-relative 1)}]]]
-          [:button
-           {:position (Vec2 40 0)
-            :size (Vec2 64 64)
-            :display [:image-quad "src/editor/delete.png" 0 0 32 32]
-            :watch [self :mode]
-            :update
-            (fn [elem]
-            ;; increase the x of the image quad
-             (tset (. elem 2 :display) 3
-                   (case self.mode
-                     {:type :delete :many false} 32
-                     {:type :delete :many true} 64
-                     _ 0)))
-            :onclick #(self:toggle-mode :delete)}]
-          [:button
-           {:position (Vec2 104 0)
-            :size (Vec2 64 64)
-            :display [:image-quad "src/editor/add.png" 0 0 32 32]
-            :watch [self :mode]
-            :update
-            (fn [elem]
-            ;; increase the x of the image quad
-             (tset (. elem 2 :display) 3
-                   (case self.mode.type
-                     :add 32
-                     _ 0)))
-            :onclick #(self:toggle-mode :add)}]
-          [:button
-           {:position (Vec2 168 0)
-            :size (Vec2 64 64)
-            :display [:image-quad "src/editor/eyedrop.png" 0 0 32 32]
-            :watch [self :mode]
-            :update
-            (fn [elem]
-            ;; increase the x of the image quad
-             (tset (. elem 2 :display) 3
-                   (case self.mode.type
-                     :pick 32
-                     _ 0)))
-            :onclick #(self:toggle-mode :pick)}]
-          [:button
-           {:position (Vec2 232 0)
-            :size (Vec2 64 64)
-            :display [:image-quad "src/editor/move.png" 0 0 32 32]
-            :watch [self :mode]
-            :update
-            (fn [elem]
-            ;; increase the x of the image quad
-             (tset (. elem 2 :display) 3
-                   (case self.mode.type
-                     :move 32
-                     _ 0)))
-            :onclick #(self:toggle-mode :move)}]]]))
+  (set self.UI (UI (self:generate-ui)))
   (set self.event-handlers [self.UI self]))
+
+(fn Editor.generate-resize-component [self pos offset image]
+  [:node
+   {:position pos
+    :size (Vec2 80 80)
+    :display [:image image]
+    :watch [self :mode]
+    :update
+    (fn [elem]
+      (tset (. elem 2) :disabled (not= self.mode.type :add)))}
+   [
+    [:button
+     {:position (Vec2 26 14)
+      :size (Vec2 28 40)
+      :onclick #(self:set-cursor-object-size-relative :y offset)}]
+    [:button
+     {:position (Vec2 0 54)
+      :size (Vec2 40 26)
+      :onclick #(self:set-cursor-object-size-relative :z offset)}]
+    [:button
+     {:position (Vec2 40 54)
+      :size (Vec2 40 26)
+      :onclick #(self:set-cursor-object-size-relative :x offset)}]]])
+
+(fn Editor.generate-ui [self]
+  [:node
+    {:position (Vec2 0 0)
+     :size (Vec2 0 0)}
+    [
+     [:node
+      {:position (Vec2 40 64)
+       :size (Vec2 40 80)
+       :display [:image "src/editor/layerselect.png"]
+       :watch [self :mode]
+       :update
+       (fn [elem]
+         (tset (. elem 2) :disabled (not= self.mode.type :add)))}
+      [
+       [:button
+        {:position (Vec2 0 16)
+         :size (Vec2 40 32)
+         :onclick #(self:set-layer-relative -1)}]
+       [:button
+        {:position (Vec2 0 48)
+         :size (Vec2 40 32)
+         :onclick #(self:set-layer-relative 1)}]]]
+     (self:generate-resize-component (Vec2 80 64) 1 "src/editor/grow.png")
+     (self:generate-resize-component (Vec2 160 64) -1 "src/editor/shrink.png")
+     [:button
+      {:position (Vec2 40 0)
+       :size (Vec2 64 64)
+       :display [:image-quad "src/editor/delete.png" 0 0 32 32]
+       :watch [self :mode]
+       :update
+       (fn [elem]
+        ;; increase the x of the image quad
+        (tset (. elem 2 :display) 3
+              (case self.mode
+                {:type :delete :many false} 32
+                {:type :delete :many true} 64
+                _ 0)))
+       :onclick #(self:toggle-mode :delete)}]
+     [:button
+      {:position (Vec2 104 0)
+       :size (Vec2 64 64)
+       :display [:image-quad "src/editor/add.png" 0 0 32 32]
+       :watch [self :mode]
+       :update
+       (fn [elem]
+        ;; increase the x of the image quad
+        (tset (. elem 2 :display) 3
+              (case self.mode.type
+                :add 32
+                _ 0)))
+       :onclick #(self:toggle-mode :add)}]
+     [:button
+      {:position (Vec2 168 0)
+       :size (Vec2 64 64)
+       :display [:image-quad "src/editor/eyedrop.png" 0 0 32 32]
+       :watch [self :mode]
+       :update
+       (fn [elem]
+        ;; increase the x of the image quad
+        (tset (. elem 2 :display) 3
+              (case self.mode.type
+                :pick 32
+                _ 0)))
+       :onclick #(self:toggle-mode :pick)}]
+     [:button
+      {:position (Vec2 232 0)
+       :size (Vec2 64 64)
+       :display [:image-quad "src/editor/move.png" 0 0 32 32]
+       :watch [self :mode]
+       :update
+       (fn [elem]
+        ;; increase the x of the image quad
+        (tset (. elem 2 :display) 3
+              (case self.mode.type
+                :move 32
+                _ 0)))
+       :onclick #(self:toggle-mode :move)}]]])
 
 (fn Editor.update [self])
 
@@ -120,6 +147,12 @@
      :x #(Editor.toggle-mode $1 :delete)
      :i #(Editor.toggle-mode $1 :pick)
      :m #(Editor.toggle-mode $1 :move)
+     :r #(Editor.set-cursor-object-size-relative $1 :y 1)
+     :t #(Editor.set-cursor-object-size-relative $1 :z 1)
+     :y #(Editor.set-cursor-object-size-relative $1 :x 1)
+     :f #(Editor.set-cursor-object-size-relative $1 :y -1)
+     :g #(Editor.set-cursor-object-size-relative $1 :x -1)
+     :h #(Editor.set-cursor-object-size-relative $1 :z -1)
      :up (fn [self modifiers] (set-scroll self (Vec2 0 -1) modifiers.shift))
      :down (fn [self modifiers] (set-scroll self (Vec2 0 1) modifiers.shift))
      :left (fn [self modifiers] (set-scroll self (Vec2 -1 0) modifiers.shift))
@@ -290,6 +323,18 @@
       (when center-point
         (set self.camera.center
            (util.lume.lerp self.camera.center center-point 0.5)))))))
+
+(fn Editor.set-cursor-object-size [self size]
+  (when (= self.mode.type :add)
+    (set self.cursor-object.size size)
+    (self.level:render-object self.cursor-object)))
+
+(fn Editor.set-cursor-object-size-relative [self axis offset]
+  (let [size self.cursor-object.size
+        dim (. size axis)
+        new-dim (math.max (+ dim offset) 1)]
+    (tset size axis new-dim)
+    (self:set-cursor-object-size size)))
 
 (fn Editor.set-layer-relative [self amount]
   (self:set-layer (+ self.cursor-object.pos.y (- amount))))

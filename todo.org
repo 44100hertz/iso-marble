@@ -24,7 +24,10 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 *** DONE actually highlight the object most in front, given multiple
 *** DONE press i to "eye-drop"
 *** DONE "move mode" to delete, pick, then add
-*** TODO resize cube
+*** DONE resize cube
+** TODO refactor editor keybinds
+** TODO layout engine for UI
+** TODO optimize drawing large maps
 ** TODO advanced editing operations
 *** TODO mouse move multiple objects
 **** TODO shift-click in normal mode to select multiple objects
@@ -46,6 +49,10 @@ Instead of storing tiles in a level, store a list of objects. These objects will
 ** TODO unify UI and scene model as game state tree
 ** TODO save/load maps
 * Backburner
+** TODO editor remap keybinds
+*** TODO UI text in layout
+*** TODO remapping file
+*** TODO (MAYBE) remapping GUI
 ** TODO only draw visible
 *** TODO tiles
 *** TODO grid lines
