@@ -24,9 +24,12 @@
           :size (Vec2 0 0)}
          [
           [:node
-           {:position (Vec2 0 0)
+           {:position (Vec2 40 64)
             :size (Vec2 40 80)
-            :display [:image "src/editor/layerselect.png"]}
+            :display [:image "src/editor/layerselect.png"]
+            :watch [self :mode]
+            :update (fn [elem]
+                      (tset (. elem 2) :disabled (not= self.mode.type :add)))}
            [
             [:button
              {:position (Vec2 0 16)
